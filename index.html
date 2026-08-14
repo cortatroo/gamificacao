@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conquistas Diárias</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #4CAF50;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+            --accent: #2196F3;
+        }
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex; justify-content: center;
+        }
+        .app-container {
+            width: 100%; max-width: 480px; /* Interface Mobile */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1, h2 { margin-top: 0; }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em;}
+        input {
+            width: 100%; padding: 10px; border-radius: 6px;
+            border: 1px solid #333; background: #2a2a2a; color: white;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%; padding: 12px; border-radius: 6px;
+            border: none; background-color: var(--accent); color: white;
+            font-weight: bold; font-size: 1em; cursor: pointer; margin-top: 10px;
+        }
+        button:active { opacity: 0.8; transform: scale(0.98); }
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+        }
+        .day {
+            background: #2a2a2a; border-radius: 8px; aspect-ratio: 1;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; transition: background 0.2s;
+        }
+        .day:active { transform: scale(0.9); }
+        .day.worked { background-color: var(--primary); color: white; box-shadow: 0 0 8px rgba(76, 175, 80, 0.5); }
+        
+        .status-bar {
+            display: flex; justify-content: space-between;
+            background: var(--card-bg); padding: 12px; border-radius: 8px;
+            margin-bottom: 20px; position: sticky; top: 10px; z-index: 10;
+            border: 1px solid var(--primary);
+        }
+        .status-bar div { text-align: center; }
+        .status-val { font-size: 1.2em; font-weight: bold; color: var(--primary); }
+
+        .item-card {
+            background: #2a2a2a; border-radius: 10px; padding: 15px;
+            margin-bottom: 12px; cursor: pointer; position: relative;
+            overflow: hidden; transition: transform 0.1s;
+        }
+        .item-card:active { transform: scale(0.98); }
+        .item-header { display: flex; justify-content: space-between; margin-bottom: 8px;}
+        .item-title { font-weight: bold; font-size: 1.1em; }
+        .item-values { color: var(--text-muted); font-size: 0.9em; }
+        .progress-bg { background: #444; height: 10px; border-radius: 5px; width: 100%; overflow: hidden;}
+        .progress-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.4s ease-out; }
+        .conquistado { border: 2px solid var(--primary); opacity: 0.8; }
+        .conquistado .item-title { color: var(--primary); }
+        .badge {
+            position: absolute; top: 10px; right: 10px; 
+            background: var(--primary); color: #000; font-size: 0.7em; 
+            padding: 2px 6px; border-radius: 4px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1 style="text-align: center; color: var(--primary);">🎯 Conquistas Diárias</h1>
+        
+        <!-- Tela de Configuração Inicial -->
+        <div class="card" id="setup-card">
+            <h2>1. Planejamento do Mês</h2>
+            <div class="input-group">
+                <label>Total de Entradas (Salário + Extras R$)</label>
+                <input type="number" id="input-entradas" placeholder="Ex: 1500">
+            </div>
+            <div class="input-group">
+                <label>Meta de Dias Trabalhados</label>
+                <input type="number" id="input-dias" placeholder="Ex: 20">
+            </div>
+            <button onclick="iniciarMes()">Iniciar Mês</button>
+        </div>
+
+        <!-- Tela Principal da Aplicação -->
+        <div id="main-app" style="display: none;">
+            <div class="status-bar">
+                <div>
+                    <div style="font-size:0.8em; color:var(--text-muted)">Valor do Dia</div>
+                    <div class="status-val" id="lbl-diaria">R$ 0,00</div>
+                </div>
+                <div>
+                    <div style="font-size:0.8em; color:var(--text-muted)">Dias Livres (Alocar)</div>
+                    <div class="status-val" id="lbl-livres" style="color:var(--accent);">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Marcar Dia de Trabalho</h2>
+                <p style="font-size: 0.8em; color: var(--text-muted); margin-top: -10px;">Toque no dia trabalhado para ganhar 1 dia de crédito.</p>
+                <div class="calendar-grid" id="calendar"></div>
+            </div>
+
+            <div class="card">
+                <h2>3. Meus Itens</h2>
+                <p style="font-size: 0.8em; color: var(--text-muted); margin-top: -10px;">Toque em um item para usar seu dia de crédito nele.</p>
+                <div id="items-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÃO DA API (COLE SUA URL AQUI)
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbyqi2YZdZtHk2FuEyhuYoCBsT5zdfdj_N9CaIwqhQcSsBiIGPMBoC8IUjgG7rzFBtpo/exec"; 
+        
+        let estado = {
+            entradas: 0,
+            metaDias: 0,
+            valorDiaria: 0,
+            diariasLivres: 0,
+            diasMarcados: [],
+            itens: [
+                // Dados mockados: Se a API não carregar, isso aparece para teste.
+                {id: 1, nome: "Internet", valorTotal: 100, valorAlocado: 0, status: "Pendente"},
+                {id: 2, nome: "Energia Elétrica", valorTotal: 150, valorAlocado: 50, status: "Pendente"},
+                {id: 3, nome: "Tênis Novo", valorTotal: 300, valorAlocado: 0, status: "Pendente"}
+            ]
+        };
+
+        function iniciarMes() {
+            const entradas = parseFloat(document.getElementById('input-entradas').value);
+            const dias = parseInt(document.getElementById('input-dias').value);
+
+            if(!entradas || !dias) {
+                alert("Preencha as entradas e a meta de dias.");
+                return;
+            }
+
+            estado.entradas = entradas;
+            estado.metaDias = dias;
+            estado.valorDiaria = entradas / dias;
+
+            document.getElementById('setup-card').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            atualizarInterface();
+            renderizarCalendario();
+            renderizarItens();
+            
+            // Tenta puxar os itens reais da sua planilha
+            carregarItensDaAPI(); 
+        }
+
+        function atualizarInterface() {
+            document.getElementById('lbl-diaria').innerText = `R$ ${estado.valorDiaria.toFixed(2)}`;
+            document.getElementById('lbl-livres').innerText = estado.diariasLivres;
+        }
+
+        function renderizarCalendario() {
+            const cal = document.getElementById('calendar');
+            cal.innerHTML = '';
+            for(let i = 1; i <= 31; i++) {
+                const div = document.createElement('div');
+                div.className = 'day';
+                div.innerText = i;
+                div.onclick = () => marcarDia(i, div);
+                cal.appendChild(div);
+            }
+        }
+
+        function marcarDia(dia, elemento) {
+            if(estado.diasMarcados.includes(dia)) return; // Se já clicou, ignora
+            
+            estado.diasMarcados.push(dia);
+            estado.diariasLivres++;
+            elemento.classList.add('worked');
+            atualizarInterface();
+        }
+
+        function renderizarItens() {
+            const lista = document.getElementById('items-list');
+            lista.innerHTML = '';
+
+            estado.itens.forEach(item => {
+                const porcentagem = Math.min((item.valorAlocado / item.valorTotal) * 100, 100);
+                const conquistado = item.status === 'Conquistado' || porcentagem >= 100;
+                
+                const card = document.createElement('div');
+                card.className = `item-card ${conquistado ? 'conquistado' : ''}`;
+                card.onclick = () => alocarValor(item.id);
+                
+                let html = `
+                    <div class="item-header">
+                        <div class="item-title">${item.nome}</div>
+                        <div class="item-values">R$ ${item.valorAlocado.toFixed(2)} / R$ ${item.valorTotal.toFixed(2)}</div>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" style="width: ${porcentagem}%"></div>
+                    </div>
+                `;
+
+                if (conquistado) {
+                    html += `<div class="badge">✓ PAGO</div>`;
+                } else {
+                    const diasRestantes = Math.ceil((item.valorTotal - item.valorAlocado) / estado.valorDiaria);
+                    html += `<div style="font-size: 0.75em; color: var(--text-muted); margin-top: 5px; text-align: right;">
+                        Faltam ${diasRestantes} dias de trabalho
+                    </div>`;
+                }
+
+                card.innerHTML = html;
+                lista.appendChild(card);
+            });
+        }
+
+        async function carregarItensDaAPI() {
+            if(API_URL.includes("COLE_A_URL")) return;
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getDados' })
+                });
+                const json = await res.json();
+                if(json.success && json.data.itens && json.data.itens.length > 0) {
+                    estado.itens = json.data.itens;
+                    renderizarItens();
+                }
+            } catch(e) {
+                console.error("Erro ao carregar do Google Sheets", e);
+            }
+        }
+
+        async function alocarValor(idItem) {
+            const item = estado.itens.find(i => i.id == idItem);
+            if(item.status === 'Conquistado' || item.valorAlocado >= item.valorTotal) return;
+
+            if(estado.diariasLivres <= 0) {
+                alert("Você não tem dias livres disponíveis.
+Marque um dia de trabalho no calendário primeiro!");
+                return;
+            }
+
+            // ATUALIZAÇÃO OTIMISTA: Atualiza a tela imediatamente para não haver delay para o usuário
+            estado.diariasLivres--;
+            item.valorAlocado += estado.valorDiaria;
+            
+            if(item.valorAlocado >= item.valorTotal) {
+                item.valorAlocado = item.valorTotal;
+                item.status = 'Conquistado';
+            }
+            
+            atualizarInterface();
+            renderizarItens();
+
+            // Sincroniza com o Google Sheets no fundo
+            if(!API_URL.includes("COLE_A_URL")) {
+                try {
+                    const dataAtual = new Date();
+                    const mesAnoStr = `${("0" + (dataAtual.getMonth() + 1)).slice(-2)}/${dataAtual.getFullYear()}`;
+
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'alocarValor',
+                            idItem: idItem,
+                            valorDia: estado.valorDiaria,
+                            mesAno: mesAnoStr
+                        })
+                    });
+                } catch(e) {
+                    console.error("Erro ao salvar", e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
