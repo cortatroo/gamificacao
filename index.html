@@ -3,76 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conquistas Diárias</title>
+    <title>Conquistas Diárias V3</title>
     <style>
-        :root {
-            --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50;
-            --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3;
-        }
-        body {
-            margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main);
-            display: flex; justify-content: center;
-        }
-        .app-container {
-            width: 100%; max-width: 480px; min-height: 100vh;
-            padding: 20px; padding-bottom: 80px; box-sizing: border-box;
-        }
+        :root { --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50; --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3; --danger: #f44336; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 480px; min-height: 100vh; padding: 20px; padding-bottom: 90px; box-sizing: border-box; }
         h1, h2 { margin-top: 0; }
         .card { background-color: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
         
-        /* Formulários */
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em;}
-        input[type="text"], input[type="number"] {
-            width: 100%; padding: 10px; border-radius: 6px;
-            border: 1px solid #333; background: #2a2a2a; color: white; box-sizing: border-box;
-        }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: white; box-sizing: border-box; }
         .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        button {
-            width: 100%; padding: 12px; border-radius: 6px; border: none; 
-            background-color: var(--accent); color: white; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
+        
+        button { width: 100%; padding: 12px; border-radius: 6px; border: none; background-color: var(--accent); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
         button.btn-success { background-color: var(--primary); }
+        button.btn-danger { background-color: var(--danger); }
+        button.btn-outline { background-color: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
         button:active { transform: scale(0.98); }
 
-        /* Navegação Inferior */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg);
-            display: flex; justify-content: space-around; padding: 10px 0;
-            border-top: 1px solid #333; z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom));
-        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
         .nav-item { color: var(--text-muted); text-align: center; cursor: pointer; flex: 1; font-size: 0.8em;}
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-icon { font-size: 1.5em; display: block; margin-bottom: 2px; }
 
-        /* Abas */
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Calendário Real */
         .calendar-header { text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .weekday { font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;}
-        .day {
-            background: #2a2a2a; border-radius: 8px; aspect-ratio: 1;
-            display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;
-        }
+        .day { background: #2a2a2a; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
         .day.empty { background: transparent; cursor: default;}
         .day:active:not(.empty) { transform: scale(0.9); }
         .day.worked { background-color: var(--primary); color: white; box-shadow: 0 0 8px rgba(76, 175, 80, 0.4); }
 
-        /* Itens e Status */
-        .status-bar {
-            display: flex; justify-content: space-between; background: var(--card-bg); 
-            padding: 12px; border-radius: 8px; margin-bottom: 20px; position: sticky; top: 10px; z-index: 10;
-            border: 1px solid var(--primary);
-        }
+        .status-bar { display: flex; justify-content: space-between; background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 20px; position: sticky; top: 10px; z-index: 10; border: 1px solid var(--primary); }
         .status-val { font-size: 1.2em; font-weight: bold; color: var(--primary); }
-        .item-card {
-            background: #2a2a2a; border-radius: 10px; padding: 15px; margin-bottom: 12px; cursor: pointer; position: relative;
-        }
+        
+        .item-card { background: #2a2a2a; border-radius: 10px; padding: 15px; margin-bottom: 12px; cursor: pointer; position: relative; }
         .item-card:active { transform: scale(0.98); }
         .item-header { display: flex; justify-content: space-between; margin-bottom: 8px;}
         .item-title { font-weight: bold; font-size: 1.1em; }
@@ -81,7 +51,11 @@
         .conquistado { border: 2px solid var(--primary); opacity: 0.8; }
         .badge { position: absolute; top: 10px; right: 10px; background: var(--primary); color: #000; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
-        /* Lista Histórico */
+        /* Modal de Ações */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: flex-end; z-index: 200; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
         .hist-item { border-bottom: 1px solid #333; padding: 10px 0; font-size: 0.9em; }
         .hist-date { color: var(--text-muted); font-size: 0.8em; }
     </style>
@@ -90,31 +64,17 @@
     <div class="app-container">
         <h1 style="text-align: center; color: var(--primary); margin-bottom: 20px;">🎯 Conquistas Diárias</h1>
         
-        <!-- SETUP (Aparece apenas se não iniciado) -->
         <div class="card" id="setup-card">
             <h2>Planejamento do Mês</h2>
-            <div class="input-group">
-                <label>Total de Entradas (Salário + Extras R$)</label>
-                <input type="number" id="input-entradas" placeholder="Ex: 1500">
-            </div>
-            <div class="input-group">
-                <label>Meta de Dias Trabalhados</label>
-                <input type="number" id="input-dias" placeholder="Ex: 20">
-            </div>
+            <div class="input-group"><label>Total de Entradas (R$)</label><input type="number" id="input-entradas"></div>
+            <div class="input-group"><label>Meta de Dias Trabalhados</label><input type="number" id="input-dias"></div>
             <button onclick="iniciarMes()">Iniciar Mês</button>
         </div>
 
-        <!-- ABA 1: INÍCIO (Calendário e Alocação) -->
         <div id="tab-home" class="tab-content">
             <div class="status-bar">
-                <div style="text-align:center;">
-                    <div style="font-size:0.8em; color:var(--text-muted)">Valor do Dia</div>
-                    <div class="status-val" id="lbl-diaria">R$ 0,00</div>
-                </div>
-                <div style="text-align:center;">
-                    <div style="font-size:0.8em; color:var(--text-muted)">Dias Livres</div>
-                    <div class="status-val" id="lbl-livres" style="color:var(--accent);">0</div>
-                </div>
+                <div style="text-align:center;"><div style="font-size:0.8em; color:var(--text-muted)">Valor do Dia</div><div class="status-val" id="lbl-diaria">R$ 0,00</div></div>
+                <div style="text-align:center;"><div style="font-size:0.8em; color:var(--text-muted)">Dias Livres</div><div class="status-val" id="lbl-livres" style="color:var(--accent);">0</div></div>
             </div>
 
             <div class="card">
@@ -122,66 +82,88 @@
                 <div class="calendar-grid" id="calendar"></div>
             </div>
 
-            <div class="card">
+            <div class="card" style="margin-bottom: 0;">
                 <h2>Meus Itens</h2>
                 <div id="items-list"></div>
+                <button class="btn-danger" style="margin-top: 30px;" onclick="encerrarMes()">Virar o Mês (Resetar)</button>
             </div>
         </div>
 
-        <!-- ABA 2: NOVO ITEM -->
         <div id="tab-add" class="tab-content">
             <div class="card">
-                <h2>Cadastrar Novo Item</h2>
-                <div class="input-group">
-                    <label>Nome do Item / Conta</label>
-                    <input type="text" id="novo-item-nome" placeholder="Ex: Conta de Água">
-                </div>
-                <div class="input-group">
-                    <label>Valor Total (R$)</label>
-                    <input type="number" id="novo-item-valor" placeholder="Ex: 85.50">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="novo-item-fixo" style="width: 20px; height: 20px;">
-                    <label for="novo-item-fixo" style="margin:0;">Conta Fixa (Mensal)</label>
-                </div>
-                <button class="btn-success" onclick="salvarNovoItem()" id="btn-salvar-item">Salvar Item</button>
+                <h2 id="titulo-form-item">Cadastrar Novo Item</h2>
+                <input type="hidden" id="item-id-edit">
+                <div class="input-group"><label>Nome do Item / Conta</label><input type="text" id="novo-item-nome"></div>
+                <div class="input-group"><label>Valor Total (R$)</label><input type="number" id="novo-item-valor"></div>
+                <div class="checkbox-group"><input type="checkbox" id="novo-item-fixo" style="width: 20px; height: 20px;"><label for="novo-item-fixo" style="margin:0;">Conta Fixa Mensal</label></div>
+                <button class="btn-success" onclick="salvarItem()" id="btn-salvar-item">Salvar Item</button>
+                <button class="btn-outline" onclick="fecharEdicao()" id="btn-cancelar-edicao" style="display:none;">Cancelar</button>
             </div>
         </div>
 
-        <!-- ABA 3: HISTÓRICO -->
         <div id="tab-history" class="tab-content">
             <div class="card">
-                <h2>Histórico de Conquistas</h2>
-                <button onclick="carregarHistorico()" style="margin-bottom: 15px; font-size: 0.8em; background:#333;">🔄 Atualizar Histórico</button>
-                <div id="historico-list">
-                    <p style="color:var(--text-muted); font-size: 0.9em;">Carregando ou nenhum item conquistado ainda...</p>
-                </div>
+                <h2>Histórico</h2>
+                <select id="filtro-mes" onchange="renderizarHistorico()" style="margin-bottom: 15px;">
+                    <option value="todos">Todos os Meses</option>
+                </select>
+                <button onclick="carregarHistoricoDaAPI()" style="margin-bottom: 15px; font-size: 0.8em; background:#333;">🔄 Atualizar</button>
+                <div id="historico-list"><p style="color:var(--text-muted); font-size: 0.9em;">Carregando...</p></div>
             </div>
         </div>
     </div>
 
-    <!-- BARRA DE NAVEGAÇÃO INFERIOR -->
+    <!-- NAVEGAÇÃO -->
     <nav class="bottom-nav" id="bottom-nav" style="display:none;">
-        <div class="nav-item active" onclick="mudarAba('home', this)">
-            <span class="nav-icon">🏠</span>Início
-        </div>
-        <div class="nav-item" onclick="mudarAba('add', this)">
-            <span class="nav-icon">➕</span>Novo Item
-        </div>
-        <div class="nav-item" onclick="mudarAba('history', this); carregarHistorico();">
-            <span class="nav-icon">📜</span>Histórico
-        </div>
+        <div class="nav-item active" onclick="mudarAba('home', this)"><span class="nav-icon">🏠</span>Início</div>
+        <div class="nav-item" onclick="abrirCadastro()"><span class="nav-icon">➕</span>Novo Item</div>
+        <div class="nav-item" onclick="mudarAba('history', this); carregarHistoricoDaAPI();"><span class="nav-icon">📜</span>Histórico</div>
     </nav>
 
+    <!-- MODAL DE AÇÕES DO ITEM -->
+    <div class="modal-overlay" id="item-modal" onclick="fecharModal(event)">
+        <div class="modal-content" id="modal-body">
+            <h2 id="modal-title" style="margin-bottom: 5px;">Nome do Item</h2>
+            <p id="modal-subtitle" style="color:var(--text-muted); font-size: 0.9em; margin-top:0; margin-bottom: 20px;">R$ 0,00 / R$ 0,00</p>
+            
+            <button class="btn-success" id="btn-modal-add" onclick="processarAlocacao(1)">➕ Alocar 1 Dia (Adicionar Valor)</button>
+            <button class="btn-outline" id="btn-modal-remove" onclick="processarAlocacao(-1)">➖ Desfazer 1 Dia (Remover Valor)</button>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button style="background: #333;" onclick="prepararEdicao()">✏️ Editar</button>
+                <button class="btn-danger" onclick="apagarItem()">🗑️ Excluir</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // COLE SUA URL AQUI
-        const API_URL = "https://script.google.com/macros/s/AKfycbwVdzjwsqAX_qjDd5rH0yCBevIHGiejLyMFU4MwWzwU0PE5UJOpyTa1n7aOvBBhzHMK/exec"; 
-        
-        let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diariasLivres: 0, diasMarcados: [],
-            itens: [
-                {id: 1, nome: "Exemplo (Modo Teste)", valorTotal: 100, valorAlocado: 0, status: "Pendente"}
-            ]
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbwM8aPmJ9QjW0djetGnxn8EeDbn8-PzbJGEme0vR-oT7dUq-LeSwiSbOutXqLtwxYLr/exec"; 
+        // ==========================================
+
+        let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diariasLivres: 0, diasMarcados: [], itens: [] };
+        let historicoCompleto = [];
+        let itemSelecionadoParaAcao = null;
+
+        // INICIALIZAÇÃO E LOCALSTORAGE
+        window.onload = () => {
+            const salvo = localStorage.getItem('gamificacao_estado');
+            if (salvo) {
+                const dados = JSON.parse(salvo);
+                estado.entradas = dados.entradas; estado.metaDias = dados.metaDias; estado.valorDiaria = dados.valorDiaria;
+                estado.diariasLivres = dados.diariasLivres; estado.diasMarcados = dados.diasMarcados;
+                
+                document.getElementById('input-entradas').value = estado.entradas;
+                document.getElementById('input-dias').value = estado.metaDias;
+                
+                iniciarMesVisual();
+            }
         };
+
+        function salvarLocal() {
+            const dadosParaSalvar = { entradas: estado.entradas, metaDias: estado.metaDias, valorDiaria: estado.valorDiaria, diariasLivres: estado.diariasLivres, diasMarcados: estado.diasMarcados };
+            localStorage.setItem('gamificacao_estado', JSON.stringify(dadosParaSalvar));
+        }
 
         function iniciarMes() {
             const entradas = parseFloat(document.getElementById('input-entradas').value);
@@ -189,20 +171,22 @@
             if(!entradas || !dias) return alert("Preencha as entradas e a meta de dias.");
             
             estado.entradas = entradas; estado.metaDias = dias; estado.valorDiaria = entradas / dias;
-            
+            estado.diariasLivres = 0; estado.diasMarcados = []; // Reseta marcações ao iniciar um novo manualmente
+            salvarLocal(); iniciarMesVisual();
+        }
+
+        function iniciarMesVisual() {
             document.getElementById('setup-card').style.display = 'none';
             document.getElementById('bottom-nav').style.display = 'flex';
             document.getElementById('tab-home').classList.add('active');
-            
             atualizarInterface(); renderizarCalendarioReal(); carregarItensDaAPI();
         }
 
         function mudarAba(abaId, elementoNav) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById('tab-' + abaId).classList.add('active');
-            
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            elementoNav.classList.add('active');
+            if(elementoNav) elementoNav.classList.add('active');
         }
 
         function atualizarInterface() {
@@ -211,68 +195,61 @@
             renderizarItens();
         }
 
+        // CALENDÁRIO COM DESFAZER
         function renderizarCalendarioReal() {
-            const cal = document.getElementById('calendar');
-            cal.innerHTML = '';
-            
-            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-            diasSemana.forEach(d => {
+            const cal = document.getElementById('calendar'); cal.innerHTML = '';
+            ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(d => {
                 const div = document.createElement('div'); div.className = 'weekday'; div.innerText = d; cal.appendChild(div);
             });
-
-            const hoje = new Date();
-            const ano = hoje.getFullYear(); const mes = hoje.getMonth();
-            const primeiroDia = new Date(ano, mes, 1).getDay();
-            const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-
+            const hoje = new Date(); const ano = hoje.getFullYear(); const mes = hoje.getMonth();
+            const primeiroDia = new Date(ano, mes, 1).getDay(); const diasNoMes = new Date(ano, mes + 1, 0).getDate();
             document.getElementById('mes-atual-label').innerText = hoje.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
-            // Células vazias
-            for(let i = 0; i < primeiroDia; i++) {
-                const div = document.createElement('div'); div.className = 'day empty'; cal.appendChild(div);
-            }
+            for(let i = 0; i < primeiroDia; i++) { const div = document.createElement('div'); div.className = 'day empty'; cal.appendChild(div); }
 
-            // Dias do mês
             for(let i = 1; i <= diasNoMes; i++) {
-                const div = document.createElement('div'); div.className = 'day';
-                div.innerText = i;
+                const div = document.createElement('div'); div.className = 'day'; div.innerText = i;
                 if(estado.diasMarcados.includes(i)) div.classList.add('worked');
-                div.onclick = () => marcarDia(i, div);
+                div.onclick = () => alternarDia(i, div);
                 cal.appendChild(div);
             }
         }
 
-        function marcarDia(dia, elemento) {
-            if(estado.diasMarcados.includes(dia)) return; 
-            estado.diasMarcados.push(dia); estado.diariasLivres++;
-            elemento.classList.add('worked');
-            atualizarInterface();
+        function alternarDia(dia, elemento) {
+            const index = estado.diasMarcados.indexOf(dia);
+            if(index > -1) { // Desmarcar
+                estado.diasMarcados.splice(index, 1);
+                estado.diariasLivres--;
+                elemento.classList.remove('worked');
+            } else { // Marcar
+                estado.diasMarcados.push(dia);
+                estado.diariasLivres++;
+                elemento.classList.add('worked');
+            }
+            salvarLocal(); atualizarInterface();
         }
 
+        // ITENS E MODAL
         function renderizarItens() {
-            const lista = document.getElementById('items-list');
-            lista.innerHTML = '';
+            const lista = document.getElementById('items-list'); lista.innerHTML = '';
+            if(estado.itens.length === 0) lista.innerHTML = '<p style="color:var(--text-muted); font-size: 0.9em; text-align:center;">Nenhum item cadastrado.</p>';
+            
             estado.itens.forEach(item => {
-                const perc = Math.min((item.valorAlocado / item.valorTotal) * 100, 100);
+                const perc = Math.min((parseFloat(item.valorAlocado) / parseFloat(item.valorTotal)) * 100, 100);
                 const conquistado = item.status === 'Conquistado' || perc >= 100;
                 
                 const card = document.createElement('div');
                 card.className = `item-card ${conquistado ? 'conquistado' : ''}`;
-                card.onclick = () => alocarValor(item.id);
+                card.onclick = () => abrirModalAcoes(item.id);
                 
                 let html = `
                     <div class="item-header">
                         <div class="item-title">${item.nome} ${item.fixo === 'Sim' ? '📌' : ''}</div>
-                        <div style="font-size: 0.8em; color:var(--text-muted)">R$ ${item.valorAlocado.toFixed(2)} / R$ ${item.valorTotal.toFixed(2)}</div>
+                        <div style="font-size: 0.8em; color:var(--text-muted)">R$ ${parseFloat(item.valorAlocado).toFixed(2)} / R$ ${parseFloat(item.valorTotal).toFixed(2)}</div>
                     </div>
                     <div class="progress-bg"><div class="progress-fill" style="width: ${perc}%"></div></div>
                 `;
-
                 if (conquistado) html += `<div class="badge">✓ PAGO</div>`;
-                else {
-                    const faltam = Math.ceil((item.valorTotal - item.valorAlocado) / estado.valorDiaria);
-                    html += `<div style="font-size: 0.75em; color: var(--text-muted); margin-top: 5px; text-align: right;">Faltam ${faltam} dias</div>`;
-                }
                 card.innerHTML = html; lista.appendChild(card);
             });
         }
@@ -282,85 +259,172 @@
             try {
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDados' }) });
                 const json = await res.json();
-                if(json.success && json.data.itens.length > 0) { estado.itens = json.data.itens; renderizarItens(); }
+                if(json.success) { estado.itens = json.data.itens; renderizarItens(); }
             } catch(e) { console.error(e); }
         }
 
-        async function alocarValor(idItem) {
-            const item = estado.itens.find(i => i.id == idItem);
-            if(item.status === 'Conquistado' || item.valorAlocado >= item.valorTotal) return;
-            if(estado.diariasLivres <= 0) return alert("Marque um dia de trabalho no calendário primeiro!");
+        function abrirModalAcoes(idItem) {
+            itemSelecionadoParaAcao = estado.itens.find(i => i.id == idItem);
+            document.getElementById('modal-title').innerText = itemSelecionadoParaAcao.nome;
+            document.getElementById('modal-subtitle').innerText = `R$ ${parseFloat(itemSelecionadoParaAcao.valorAlocado).toFixed(2)} / R$ ${parseFloat(itemSelecionadoParaAcao.valorTotal).toFixed(2)}`;
+            
+            // Controle dos botões
+            document.getElementById('btn-modal-add').disabled = (itemSelecionadoParaAcao.status === 'Conquistado' || estado.diariasLivres <= 0);
+            document.getElementById('btn-modal-remove').disabled = (parseFloat(itemSelecionadoParaAcao.valorAlocado) <= 0);
+            
+            document.getElementById('item-modal').style.display = 'flex';
+        }
 
-            estado.diariasLivres--; item.valorAlocado += estado.valorDiaria;
+        function fecharModal(e) { if(e && e.target.id === 'item-modal') document.getElementById('item-modal').style.display = 'none'; }
+        function forcarFecharModal() { document.getElementById('item-modal').style.display = 'none'; }
+
+        async function processarAlocacao(multiplicador) { // 1 para adicionar, -1 para remover
+            if(!itemSelecionadoParaAcao) return;
+            const item = itemSelecionadoParaAcao;
+            const valorCalculado = estado.valorDiaria * multiplicador;
+
+            if(multiplicador > 0) {
+                if(estado.diariasLivres <= 0) return;
+                estado.diariasLivres--;
+            } else {
+                estado.diariasLivres++; // Devolve o dia livre se remover do item
+            }
+
+            let novoAlocado = parseFloat(item.valorAlocado) + valorCalculado;
+            if(novoAlocado < 0) novoAlocado = 0;
+            
+            item.valorAlocado = novoAlocado;
             if(item.valorAlocado >= item.valorTotal) { item.valorAlocado = item.valorTotal; item.status = 'Conquistado'; }
-            atualizarInterface();
+            else { item.status = 'Pendente'; }
+
+            salvarLocal(); atualizarInterface(); forcarFecharModal();
 
             if(!API_URL.includes("COLE_A_URL")) {
                 const dt = new Date(); const mesAno = `${("0" + (dt.getMonth() + 1)).slice(-2)}/${dt.getFullYear()}`;
-                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'alocarValor', idItem: idItem, valorDia: estado.valorDiaria, mesAno: mesAno }) });
+                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'alocarValor', idItem: item.id, valorDia: valorCalculado, mesAno: mesAno }) });
             }
         }
 
-        async function salvarNovoItem() {
+        // CADASTRO, EDIÇÃO E EXCLUSÃO
+        function abrirCadastro() {
+            document.getElementById('titulo-form-item').innerText = "Cadastrar Novo Item";
+            document.getElementById('item-id-edit').value = "";
+            document.getElementById('novo-item-nome').value = "";
+            document.getElementById('novo-item-valor').value = "";
+            document.getElementById('novo-item-fixo').checked = false;
+            document.getElementById('btn-cancelar-edicao').style.display = 'none';
+            mudarAba('add', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        function prepararEdicao() {
+            forcarFecharModal();
+            document.getElementById('titulo-form-item').innerText = "Editar Item";
+            document.getElementById('item-id-edit').value = itemSelecionadoParaAcao.id;
+            document.getElementById('novo-item-nome').value = itemSelecionadoParaAcao.nome;
+            document.getElementById('novo-item-valor').value = itemSelecionadoParaAcao.valorTotal;
+            document.getElementById('novo-item-fixo').checked = itemSelecionadoParaAcao.fixo === "Sim";
+            document.getElementById('btn-cancelar-edicao').style.display = 'block';
+            mudarAba('add', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        function fecharEdicao() { abrirCadastro(); mudarAba('home', document.querySelectorAll('.nav-item')[0]); }
+
+        async function salvarItem() {
+            const idEdit = document.getElementById('item-id-edit').value;
             const nome = document.getElementById('novo-item-nome').value;
             const valor = parseFloat(document.getElementById('novo-item-valor').value);
             const fixo = document.getElementById('novo-item-fixo').checked;
-            const btn = document.getElementById('btn-salvar-item');
-
-            if(!nome || !valor) return alert("Preencha nome e valor do item.");
             
-            btn.innerText = "Salvando..."; btn.disabled = true;
-
-            // Salva na Planilha
-            if(!API_URL.includes("COLE_A_URL")) {
-                try {
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adicionarItem', nome: nome, valor: valor, fixo: fixo }) });
-                    const json = await res.json();
-                    if(json.success) {
-                        estado.itens.push(json.data); // Adiciona na tela
-                        alert("Item cadastrado com sucesso!");
-                        document.getElementById('novo-item-nome').value = '';
-                        document.getElementById('novo-item-valor').value = '';
-                        atualizarInterface();
-                        mudarAba('home', document.querySelectorAll('.nav-item')[0]); // Volta pra home
-                    }
-                } catch(e) { alert("Erro ao salvar."); }
-            } else {
-                // Modo Teste
-                estado.itens.push({id: Date.now(), nome: nome, valorTotal: valor, valorAlocado: 0, fixo: fixo ? 'Sim' : 'Não', status: "Pendente"});
-                atualizarInterface(); mudarAba('home', document.querySelectorAll('.nav-item')[0]);
+            if(!nome || !valor) return alert("Preencha nome e valor.");
+            document.getElementById('btn-salvar-item').innerText = "Salvando...";
+            
+            if(idEdit) { // Editando
+                if(!API_URL.includes("COLE_A_URL")) {
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'editarItem', idItem: idEdit, nome: nome, valor: valor, fixo: fixo }) });
+                    carregarItensDaAPI();
+                }
+            } else { // Novo
+                if(!API_URL.includes("COLE_A_URL")) {
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adicionarItem', nome: nome, valor: valor, fixo: fixo }) });
+                    carregarItensDaAPI();
+                }
             }
-            btn.innerText = "Salvar Item"; btn.disabled = false;
+            
+            document.getElementById('btn-salvar-item').innerText = "Salvar Item";
+            fecharEdicao();
         }
 
-        async function carregarHistorico() {
-            const divHistorico = document.getElementById('historico-list');
-            if(API_URL.includes("COLE_A_URL")) {
-                divHistorico.innerHTML = "<p>Configure a API para ver o histórico real.</p>"; return;
-            }
+        async function apagarItem() {
+            if(!confirm(`Tem certeza que deseja excluir '${itemSelecionadoParaAcao.nome}'?`)) return;
+            forcarFecharModal();
+            estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id);
+            atualizarInterface();
             
-            divHistorico.innerHTML = "<p>Carregando histórico...</p>";
+            if(!API_URL.includes("COLE_A_URL")) {
+                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) });
+            }
+        }
+
+        // VIRADA DE MÊS
+        async function encerrarMes() {
+            if(!confirm("Atenção: Isso vai limpar seu calendário atual, apagar os itens normais já pagos e resetar o progresso dos itens fixos. Deseja iniciar um novo mês?")) return;
+            
+            localStorage.removeItem('gamificacao_estado'); // Limpa o cache
+            
+            if(!API_URL.includes("COLE_A_URL")) {
+                document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Preparando novo mês...</h2>";
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'encerrarMes' }) });
+                window.location.reload(); // Recarrega a página do zero
+            } else {
+                window.location.reload();
+            }
+        }
+
+        // HISTÓRICO E FILTRO
+        async function carregarHistoricoDaAPI() {
+            if(API_URL.includes("COLE_A_URL")) return;
+            document.getElementById('historico-list').innerHTML = "<p>Carregando histórico...</p>";
             try {
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getHistorico' }) });
                 const json = await res.json();
-                
-                if(json.success && json.data.historico.length > 0) {
-                    divHistorico.innerHTML = '';
-                    json.data.historico.forEach(h => {
-                        divHistorico.innerHTML += `
-                            <div class="hist-item">
-                                <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                                    <span>${h.item}</span>
-                                    <span style="color:var(--primary)">R$ ${parseFloat(h.valor).toFixed(2)}</span>
-                                </div>
-                                <div class="hist-date">Pago em ${h.data} • Custou ${h.dias} dias trabalhados</div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    divHistorico.innerHTML = "<p>Nenhuma conquista registrada ainda.</p>";
+                if(json.success) {
+                    historicoCompleto = json.data.historico;
+                    preencherFiltroMeses();
+                    renderizarHistorico();
                 }
-            } catch(e) { divHistorico.innerHTML = "<p>Erro ao buscar histórico.</p>"; }
+            } catch(e) { document.getElementById('historico-list').innerHTML = "<p>Erro ao buscar histórico.</p>"; }
+        }
+
+        function preencherFiltroMeses() {
+            const select = document.getElementById('filtro-mes');
+            const mesesUnicos = [...new Set(historicoCompleto.map(h => h.mesAno))];
+            
+            select.innerHTML = '<option value="todos">Todos os Meses</option>';
+            mesesUnicos.forEach(m => { select.innerHTML += `<option value="${m}">${m}</option>`; });
+        }
+
+        function renderizarHistorico() {
+            const divHistorico = document.getElementById('historico-list');
+            const mesSelecionado = document.getElementById('filtro-mes').value;
+            
+            let filtrado = historicoCompleto;
+            if(mesSelecionado !== 'todos') filtrado = historicoCompleto.filter(h => h.mesAno === mesSelecionado);
+
+            if(filtrado.length === 0) {
+                divHistorico.innerHTML = "<p>Nenhuma conquista registrada.</p>"; return;
+            }
+
+            divHistorico.innerHTML = '';
+            filtrado.forEach(h => {
+                divHistorico.innerHTML += `
+                    <div class="hist-item">
+                        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                            <span>${h.item}</span><span style="color:var(--primary)">R$ ${parseFloat(h.valor).toFixed(2)}</span>
+                        </div>
+                        <div class="hist-date">Pago em ${h.data} • Custou ${h.dias} dias trabalhados</div>
+                    </div>
+                `;
+            });
         }
     </script>
 </body>
