@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conquistas Diárias V3</title>
+    <title>Conquistas Diárias V4</title>
     <style>
         :root { --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50; --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3; --danger: #f44336; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
@@ -14,7 +14,6 @@
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em;}
         input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: white; box-sizing: border-box; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         
         button { width: 100%; padding: 12px; border-radius: 6px; border: none; background-color: var(--accent); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
         button.btn-success { background-color: var(--primary); }
@@ -93,9 +92,24 @@
             <div class="card">
                 <h2 id="titulo-form-item">Cadastrar Novo Item</h2>
                 <input type="hidden" id="item-id-edit">
-                <div class="input-group"><label>Nome do Item / Conta</label><input type="text" id="novo-item-nome"></div>
-                <div class="input-group"><label>Valor Total (R$)</label><input type="number" id="novo-item-valor"></div>
-                <div class="checkbox-group"><input type="checkbox" id="novo-item-fixo" style="width: 20px; height: 20px;"><label for="novo-item-fixo" style="margin:0;">Conta Fixa Mensal</label></div>
+                
+                <div class="input-group"><label>Nome do Item / Conta</label><input type="text" id="novo-item-nome" placeholder="Ex: Celular Novo"></div>
+                <div class="input-group"><label>Valor Total / Valor da Parcela (R$)</label><input type="number" id="novo-item-valor" placeholder="Ex: 150.00"></div>
+                
+                <div class="input-group">
+                    <label>Tipo de Item</label>
+                    <select id="novo-item-tipo" onchange="verificarTipoParcela()">
+                        <option value="Única">Compra Única</option>
+                        <option value="Fixa">Conta Fixa Mensal</option>
+                        <option value="Parcelada">Compra Parcelada</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" id="div-parcelas" style="display: none;">
+                    <label>Total de Parcelas</label>
+                    <input type="number" id="novo-item-parcelas" placeholder="Ex: 12">
+                </div>
+
                 <button class="btn-success" onclick="salvarItem()" id="btn-salvar-item">Salvar Item</button>
                 <button class="btn-outline" onclick="fecharEdicao()" id="btn-cancelar-edicao" style="display:none;">Cancelar</button>
             </div>
@@ -138,14 +152,13 @@
 
     <script>
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbwM8aPmJ9QjW0djetGnxn8EeDbn8-PzbJGEme0vR-oT7dUq-LeSwiSbOutXqLtwxYLr/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycby-MVfLte4wWSTgsb-PBGZfewCjbGZmGyiB_9cJiZklmNARbZwYCyYCDJjNx6mMwCoq/exec"; 
         // ==========================================
 
         let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diariasLivres: 0, diasMarcados: [], itens: [] };
         let historicoCompleto = [];
         let itemSelecionadoParaAcao = null;
 
-        // INICIALIZAÇÃO E LOCALSTORAGE
         window.onload = () => {
             const salvo = localStorage.getItem('gamificacao_estado');
             if (salvo) {
@@ -171,7 +184,7 @@
             if(!entradas || !dias) return alert("Preencha as entradas e a meta de dias.");
             
             estado.entradas = entradas; estado.metaDias = dias; estado.valorDiaria = entradas / dias;
-            estado.diariasLivres = 0; estado.diasMarcados = []; // Reseta marcações ao iniciar um novo manualmente
+            estado.diariasLivres = 0; estado.diasMarcados = [];
             salvarLocal(); iniciarMesVisual();
         }
 
@@ -195,7 +208,6 @@
             renderizarItens();
         }
 
-        // CALENDÁRIO COM DESFAZER
         function renderizarCalendarioReal() {
             const cal = document.getElementById('calendar'); cal.innerHTML = '';
             ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(d => {
@@ -217,19 +229,14 @@
 
         function alternarDia(dia, elemento) {
             const index = estado.diasMarcados.indexOf(dia);
-            if(index > -1) { // Desmarcar
-                estado.diasMarcados.splice(index, 1);
-                estado.diariasLivres--;
-                elemento.classList.remove('worked');
-            } else { // Marcar
-                estado.diasMarcados.push(dia);
-                estado.diariasLivres++;
-                elemento.classList.add('worked');
+            if(index > -1) {
+                estado.diasMarcados.splice(index, 1); estado.diariasLivres--; elemento.classList.remove('worked');
+            } else {
+                estado.diasMarcados.push(dia); estado.diariasLivres++; elemento.classList.add('worked');
             }
             salvarLocal(); atualizarInterface();
         }
 
-        // ITENS E MODAL
         function renderizarItens() {
             const lista = document.getElementById('items-list'); lista.innerHTML = '';
             if(estado.itens.length === 0) lista.innerHTML = '<p style="color:var(--text-muted); font-size: 0.9em; text-align:center;">Nenhum item cadastrado.</p>';
@@ -242,9 +249,13 @@
                 card.className = `item-card ${conquistado ? 'conquistado' : ''}`;
                 card.onclick = () => abrirModalAcoes(item.id);
                 
+                let tituloVisual = item.nome;
+                if (item.tipo === 'Fixa' || item.tipo === 'Sim') tituloVisual += ' 📌';
+                if (item.tipo === 'Parcelada') tituloVisual += ` <span style="font-size:0.8em; color:var(--accent);">(${item.parcelaAtual}/${item.totalParcelas})</span>`;
+
                 let html = `
                     <div class="item-header">
-                        <div class="item-title">${item.nome} ${item.fixo === 'Sim' ? '📌' : ''}</div>
+                        <div class="item-title">${tituloVisual}</div>
                         <div style="font-size: 0.8em; color:var(--text-muted)">R$ ${parseFloat(item.valorAlocado).toFixed(2)} / R$ ${parseFloat(item.valorTotal).toFixed(2)}</div>
                     </div>
                     <div class="progress-bg"><div class="progress-fill" style="width: ${perc}%"></div></div>
@@ -265,10 +276,13 @@
 
         function abrirModalAcoes(idItem) {
             itemSelecionadoParaAcao = estado.itens.find(i => i.id == idItem);
-            document.getElementById('modal-title').innerText = itemSelecionadoParaAcao.nome;
+            
+            let displayTitle = itemSelecionadoParaAcao.nome;
+            if(itemSelecionadoParaAcao.tipo === 'Parcelada') displayTitle += ` (${itemSelecionadoParaAcao.parcelaAtual}/${itemSelecionadoParaAcao.totalParcelas})`;
+            
+            document.getElementById('modal-title').innerText = displayTitle;
             document.getElementById('modal-subtitle').innerText = `R$ ${parseFloat(itemSelecionadoParaAcao.valorAlocado).toFixed(2)} / R$ ${parseFloat(itemSelecionadoParaAcao.valorTotal).toFixed(2)}`;
             
-            // Controle dos botões
             document.getElementById('btn-modal-add').disabled = (itemSelecionadoParaAcao.status === 'Conquistado' || estado.diariasLivres <= 0);
             document.getElementById('btn-modal-remove').disabled = (parseFloat(itemSelecionadoParaAcao.valorAlocado) <= 0);
             
@@ -278,7 +292,7 @@
         function fecharModal(e) { if(e && e.target.id === 'item-modal') document.getElementById('item-modal').style.display = 'none'; }
         function forcarFecharModal() { document.getElementById('item-modal').style.display = 'none'; }
 
-        async function processarAlocacao(multiplicador) { // 1 para adicionar, -1 para remover
+        async function processarAlocacao(multiplicador) {
             if(!itemSelecionadoParaAcao) return;
             const item = itemSelecionadoParaAcao;
             const valorCalculado = estado.valorDiaria * multiplicador;
@@ -286,9 +300,7 @@
             if(multiplicador > 0) {
                 if(estado.diariasLivres <= 0) return;
                 estado.diariasLivres--;
-            } else {
-                estado.diariasLivres++; // Devolve o dia livre se remover do item
-            }
+            } else { estado.diariasLivres++; }
 
             let novoAlocado = parseFloat(item.valorAlocado) + valorCalculado;
             if(novoAlocado < 0) novoAlocado = 0;
@@ -305,14 +317,20 @@
             }
         }
 
-        // CADASTRO, EDIÇÃO E EXCLUSÃO
+        function verificarTipoParcela() {
+            const tipo = document.getElementById('novo-item-tipo').value;
+            document.getElementById('div-parcelas').style.display = tipo === 'Parcelada' ? 'block' : 'none';
+        }
+
         function abrirCadastro() {
             document.getElementById('titulo-form-item').innerText = "Cadastrar Novo Item";
             document.getElementById('item-id-edit').value = "";
             document.getElementById('novo-item-nome').value = "";
             document.getElementById('novo-item-valor').value = "";
-            document.getElementById('novo-item-fixo').checked = false;
+            document.getElementById('novo-item-tipo').value = "Única";
+            document.getElementById('novo-item-parcelas').value = "";
             document.getElementById('btn-cancelar-edicao').style.display = 'none';
+            verificarTipoParcela();
             mudarAba('add', document.querySelectorAll('.nav-item')[1]);
         }
 
@@ -322,7 +340,15 @@
             document.getElementById('item-id-edit').value = itemSelecionadoParaAcao.id;
             document.getElementById('novo-item-nome').value = itemSelecionadoParaAcao.nome;
             document.getElementById('novo-item-valor').value = itemSelecionadoParaAcao.valorTotal;
-            document.getElementById('novo-item-fixo').checked = itemSelecionadoParaAcao.fixo === "Sim";
+            
+            let tipoSalvo = itemSelecionadoParaAcao.tipo;
+            if (tipoSalvo === 'Sim') tipoSalvo = 'Fixa';
+            if (tipoSalvo === 'Não') tipoSalvo = 'Única';
+            
+            document.getElementById('novo-item-tipo').value = tipoSalvo;
+            document.getElementById('novo-item-parcelas').value = itemSelecionadoParaAcao.totalParcelas || "";
+            verificarTipoParcela();
+            
             document.getElementById('btn-cancelar-edicao').style.display = 'block';
             mudarAba('add', document.querySelectorAll('.nav-item')[1]);
         }
@@ -333,23 +359,25 @@
             const idEdit = document.getElementById('item-id-edit').value;
             const nome = document.getElementById('novo-item-nome').value;
             const valor = parseFloat(document.getElementById('novo-item-valor').value);
-            const fixo = document.getElementById('novo-item-fixo').checked;
+            const tipo = document.getElementById('novo-item-tipo').value;
+            const parcelas = parseInt(document.getElementById('novo-item-parcelas').value) || 1;
             
             if(!nome || !valor) return alert("Preencha nome e valor.");
+            if(tipo === 'Parcelada' && parcelas <= 1) return alert("Para compras parceladas, informe um número de parcelas maior que 1.");
+            
             document.getElementById('btn-salvar-item').innerText = "Salvando...";
             
-            if(idEdit) { // Editando
+            if(idEdit) {
                 if(!API_URL.includes("COLE_A_URL")) {
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'editarItem', idItem: idEdit, nome: nome, valor: valor, fixo: fixo }) });
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'editarItem', idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
                     carregarItensDaAPI();
                 }
-            } else { // Novo
+            } else {
                 if(!API_URL.includes("COLE_A_URL")) {
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adicionarItem', nome: nome, valor: valor, fixo: fixo }) });
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adicionarItem', nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
                     carregarItensDaAPI();
                 }
             }
-            
             document.getElementById('btn-salvar-item').innerText = "Salvar Item";
             fecharEdicao();
         }
@@ -359,28 +387,20 @@
             forcarFecharModal();
             estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id);
             atualizarInterface();
-            
-            if(!API_URL.includes("COLE_A_URL")) {
-                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) });
-            }
+            if(!API_URL.includes("COLE_A_URL")) fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) });
         }
 
-        // VIRADA DE MÊS
         async function encerrarMes() {
-            if(!confirm("Atenção: Isso vai limpar seu calendário atual, apagar os itens normais já pagos e resetar o progresso dos itens fixos. Deseja iniciar um novo mês?")) return;
-            
-            localStorage.removeItem('gamificacao_estado'); // Limpa o cache
+            if(!confirm("Isso vai limpar seu calendário, apagar os itens normais pagos, avançar as parcelas e resetar os itens fixos. Deseja iniciar um novo mês?")) return;
+            localStorage.removeItem('gamificacao_estado');
             
             if(!API_URL.includes("COLE_A_URL")) {
                 document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Preparando novo mês...</h2>";
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'encerrarMes' }) });
-                window.location.reload(); // Recarrega a página do zero
-            } else {
                 window.location.reload();
-            }
+            } else { window.location.reload(); }
         }
 
-        // HISTÓRICO E FILTRO
         async function carregarHistoricoDaAPI() {
             if(API_URL.includes("COLE_A_URL")) return;
             document.getElementById('historico-list').innerHTML = "<p>Carregando histórico...</p>";
@@ -389,8 +409,7 @@
                 const json = await res.json();
                 if(json.success) {
                     historicoCompleto = json.data.historico;
-                    preencherFiltroMeses();
-                    renderizarHistorico();
+                    preencherFiltroMeses(); renderizarHistorico();
                 }
             } catch(e) { document.getElementById('historico-list').innerHTML = "<p>Erro ao buscar histórico.</p>"; }
         }
@@ -398,7 +417,6 @@
         function preencherFiltroMeses() {
             const select = document.getElementById('filtro-mes');
             const mesesUnicos = [...new Set(historicoCompleto.map(h => h.mesAno))];
-            
             select.innerHTML = '<option value="todos">Todos os Meses</option>';
             mesesUnicos.forEach(m => { select.innerHTML += `<option value="${m}">${m}</option>`; });
         }
@@ -406,13 +424,10 @@
         function renderizarHistorico() {
             const divHistorico = document.getElementById('historico-list');
             const mesSelecionado = document.getElementById('filtro-mes').value;
-            
             let filtrado = historicoCompleto;
             if(mesSelecionado !== 'todos') filtrado = historicoCompleto.filter(h => h.mesAno === mesSelecionado);
 
-            if(filtrado.length === 0) {
-                divHistorico.innerHTML = "<p>Nenhuma conquista registrada.</p>"; return;
-            }
+            if(filtrado.length === 0) { divHistorico.innerHTML = "<p>Nenhuma conquista registrada.</p>"; return; }
 
             divHistorico.innerHTML = '';
             filtrado.forEach(h => {
