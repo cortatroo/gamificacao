@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conquistas Diárias V5</title>
+    <title>Conquistas Diárias V6</title>
     <style>
         :root { --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50; --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3; --warning: #FFC107; --danger: #f44336; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
@@ -15,11 +15,12 @@
         .input-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em;}
         input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: white; box-sizing: border-box; }
         
-        button { width: 100%; padding: 12px; border-radius: 6px; border: none; background-color: var(--accent); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button { width: 100%; padding: 12px; border-radius: 6px; border: none; background-color: var(--accent); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         button.btn-success { background-color: var(--primary); }
         button.btn-danger { background-color: var(--danger); }
         button.btn-outline { background-color: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
-        button:active { transform: scale(0.98); }
+        button:active:not(:disabled) { transform: scale(0.98); }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
         .nav-item { color: var(--text-muted); text-align: center; cursor: pointer; flex: 1; font-size: 0.8em;}
@@ -56,9 +57,14 @@
         
         .hist-item { border-bottom: 1px solid #333; padding: 10px 0; font-size: 0.9em; }
         .hist-date { color: var(--text-muted); font-size: 0.8em; }
+
+        /* Indicador de Sincronização */
+        #sync-indicator { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background: var(--warning); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; z-index: 1000; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
+    <div id="sync-indicator">⏳ Sincronizando...</div>
+
     <div class="app-container">
         <h1 style="text-align: center; color: var(--primary); margin-bottom: 20px;">🎯 Conquistas Diárias</h1>
         
@@ -70,8 +76,6 @@
         </div>
 
         <div id="tab-home" class="tab-content">
-            
-            <!-- TERMÔMETRO DO MÊS -->
             <div class="card" style="margin-bottom: 15px; padding: 12px 16px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                     <span style="font-size: 0.9em; font-weight: bold;">Progresso Global do Mês</span>
@@ -80,7 +84,6 @@
                 <div class="progress-bg" style="height: 14px;"><div class="progress-fill" id="bar-progresso-mes" style="width: 0%; background: var(--accent);"></div></div>
             </div>
 
-            <!-- STATUS BAR E COFRINHO -->
             <div class="status-bar">
                 <div style="text-align:center;"><div style="font-size:0.75em; color:var(--text-muted)">Valor do Dia</div><div class="status-val" id="lbl-diaria" style="font-size: 1.1em;">R$ 0,00</div></div>
                 <div style="text-align:center;"><div style="font-size:0.75em; color:var(--text-muted)">Cofrinho</div><div class="status-val" id="lbl-cofrinho" style="font-size: 1.1em; color:var(--warning);">R$ 0,00</div></div>
@@ -93,7 +96,10 @@
             </div>
 
             <div class="card" style="margin-bottom: 0;">
-                <h2>Meus Itens</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0;">Meus Itens</h2>
+                    <button onclick="carregarItensDaAPI()" style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.8em; background: #333;">🔄 Forçar Sync</button>
+                </div>
                 <div id="items-list"></div>
                 <button class="btn-danger" style="margin-top: 30px;" onclick="encerrarMes()">Virar o Mês (Resetar)</button>
             </div>
@@ -103,10 +109,8 @@
             <div class="card">
                 <h2 id="titulo-form-item">Cadastrar Novo Item</h2>
                 <input type="hidden" id="item-id-edit">
-                
                 <div class="input-group"><label>Nome do Item / Conta</label><input type="text" id="novo-item-nome" placeholder="Ex: Celular Novo"></div>
                 <div class="input-group"><label>Valor Total / Valor da Parcela (R$)</label><input type="number" id="novo-item-valor" placeholder="Ex: 150.00"></div>
-                
                 <div class="input-group">
                     <label>Tipo de Item</label>
                     <select id="novo-item-tipo" onchange="verificarTipoParcela()">
@@ -115,12 +119,7 @@
                         <option value="Parcelada">Compra Parcelada</option>
                     </select>
                 </div>
-                
-                <div class="input-group" id="div-parcelas" style="display: none;">
-                    <label>Total de Parcelas</label>
-                    <input type="number" id="novo-item-parcelas" placeholder="Ex: 12">
-                </div>
-
+                <div class="input-group" id="div-parcelas" style="display: none;"><label>Total de Parcelas</label><input type="number" id="novo-item-parcelas" placeholder="Ex: 12"></div>
                 <button class="btn-success" onclick="salvarItem()" id="btn-salvar-item">Salvar Item</button>
                 <button class="btn-outline" onclick="fecharEdicao()" id="btn-cancelar-edicao" style="display:none;">Cancelar</button>
             </div>
@@ -129,10 +128,8 @@
         <div id="tab-history" class="tab-content">
             <div class="card">
                 <h2>Histórico</h2>
-                <select id="filtro-mes" onchange="renderizarHistorico()" style="margin-bottom: 15px;">
-                    <option value="todos">Todos os Meses</option>
-                </select>
-                <button onclick="carregarHistoricoDaAPI()" style="margin-bottom: 15px; font-size: 0.8em; background:#333;">🔄 Atualizar</button>
+                <select id="filtro-mes" onchange="renderizarHistorico()" style="margin-bottom: 15px;"><option value="todos">Todos os Meses</option></select>
+                <button onclick="carregarHistoricoDaAPI()" style="margin-bottom: 15px; font-size: 0.8em; background:#333;">🔄 Atualizar Histórico</button>
                 <div id="historico-list"><p style="color:var(--text-muted); font-size: 0.9em;">Carregando...</p></div>
             </div>
         </div>
@@ -169,20 +166,25 @@
         let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diariasLivres: 0, cofrinho: 0, diasMarcados: [], itens: [] };
         let historicoCompleto = []; let itemSelecionadoParaAcao = null;
 
+        function mostrarSync() { document.getElementById('sync-indicator').style.display = 'block'; }
+        function ocultarSync() { document.getElementById('sync-indicator').style.display = 'none'; }
+
+        // Carregamento Instantâneo (Offline First)
         window.onload = () => {
             const salvo = localStorage.getItem('gamificacao_estado');
             if (salvo) {
                 const dados = JSON.parse(salvo);
-                estado.entradas = dados.entradas; estado.metaDias = dados.metaDias; estado.valorDiaria = dados.valorDiaria;
+                estado.entradas = dados.entradas || 0; estado.metaDias = dados.metaDias || 0; estado.valorDiaria = dados.valorDiaria || 0;
                 estado.diariasLivres = dados.diariasLivres || 0; estado.cofrinho = dados.cofrinho || 0; estado.diasMarcados = dados.diasMarcados || [];
+                estado.itens = dados.itens || []; // Agora carrega os itens do cache local
+                
                 document.getElementById('input-entradas').value = estado.entradas; document.getElementById('input-dias').value = estado.metaDias;
                 iniciarMesVisual();
             }
         };
 
         function salvarLocal() {
-            const dadosParaSalvar = { entradas: estado.entradas, metaDias: estado.metaDias, valorDiaria: estado.valorDiaria, diariasLivres: estado.diariasLivres, cofrinho: estado.cofrinho, diasMarcados: estado.diasMarcados };
-            localStorage.setItem('gamificacao_estado', JSON.stringify(dadosParaSalvar));
+            localStorage.setItem('gamificacao_estado', JSON.stringify(estado));
         }
 
         function iniciarMes() {
@@ -199,7 +201,8 @@
             document.getElementById('setup-card').style.display = 'none';
             document.getElementById('bottom-nav').style.display = 'flex';
             document.getElementById('tab-home').classList.add('active');
-            atualizarInterface(); renderizarCalendarioReal(); carregarItensDaAPI();
+            atualizarInterface(); renderizarCalendarioReal(); 
+            carregarItensDaAPI(); // Sincroniza em segundo plano
         }
 
         function mudarAba(abaId, elementoNav) {
@@ -214,7 +217,6 @@
             document.getElementById('lbl-livres').innerText = estado.diariasLivres;
             document.getElementById('lbl-cofrinho').innerText = `R$ ${(estado.cofrinho).toFixed(2)}`;
 
-            // Lógica do Termômetro Global
             const totalGastos = estado.itens.reduce((acc, it) => acc + parseFloat(it.valorTotal), 0);
             const totalGerado = estado.diasMarcados.length * estado.valorDiaria;
             let percMes = totalGastos > 0 ? Math.min((totalGerado / totalGastos) * 100, 100) : 0;
@@ -247,17 +249,15 @@
         function alternarDia(dia, elemento) {
             const index = estado.diasMarcados.indexOf(dia);
             if(index > -1) {
-                // Tenta Desmarcar
                 if(estado.diariasLivres > 0) {
                     estado.diariasLivres--; estado.diasMarcados.splice(index, 1); elemento.classList.remove('worked');
-                } else if(estado.cofrinho >= (estado.valorDiaria - 0.01)) { // Permite tirar do cofrinho
+                } else if(estado.cofrinho >= (estado.valorDiaria - 0.01)) { 
                     estado.cofrinho -= estado.valorDiaria; estado.diasMarcados.splice(index, 1); elemento.classList.remove('worked');
                 } else {
                     alert("Você já gastou esse dia em algum item. Desfaça a alocação no item primeiro para poder desmarcar o calendário.");
                     return;
                 }
             } else {
-                // Marcar
                 estado.diasMarcados.push(dia); estado.diariasLivres++; elemento.classList.add('worked');
             }
             salvarLocal(); atualizarInterface();
@@ -293,11 +293,17 @@
 
         async function carregarItensDaAPI() {
             if(API_URL.includes("COLE_A_URL")) return;
+            mostrarSync();
             try {
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDados' }) });
                 const json = await res.json();
-                if(json.success) { estado.itens = json.data.itens; atualizarInterface(); }
-            } catch(e) { console.error(e); }
+                if(json.success) { 
+                    estado.itens = json.data.itens; 
+                    salvarLocal(); // Sincroniza o cache local com a nuvem
+                    atualizarInterface(); 
+                }
+            } catch(e) { console.error("Falha ao puxar da Planilha. Usando dados locais.", e); }
+            finally { ocultarSync(); }
         }
 
         function abrirModalAcoes(idItem) {
@@ -323,54 +329,46 @@
             const item = itemSelecionadoParaAcao;
             let valorMudou = 0;
 
-            if (multiplicador > 0) { // ADICIONAR
+            if (multiplicador > 0) { 
                 let falta = parseFloat(item.valorTotal) - parseFloat(item.valorAlocado);
                 if (falta <= 0) return;
-
                 let disponivel = estado.cofrinho;
 
-                // Se o cofrinho não cobre o que falta e temos dias livres, "quebra" mais um dia pro cofrinho
                 if (disponivel < falta && estado.diariasLivres > 0) {
-                    estado.diariasLivres--;
-                    disponivel += estado.valorDiaria;
+                    estado.diariasLivres--; disponivel += estado.valorDiaria;
                 }
-
                 if (disponivel <= 0) return alert("Sem saldo no Cofrinho ou Dias Livres.");
 
                 valorMudou = Math.min(falta, disponivel);
                 item.valorAlocado = parseFloat(item.valorAlocado) + valorMudou;
-                estado.cofrinho = disponivel - valorMudou; // O troco fica no cofrinho
-
-            } else { // DESFAZER
+                estado.cofrinho = disponivel - valorMudou; 
+            } else { 
                 if (parseFloat(item.valorAlocado) <= 0) return;
-
-                // Remove até o limite do valor de 1 dia para não zerar tudo de uma vez sem querer
                 valorMudou = Math.min(parseFloat(item.valorAlocado), estado.valorDiaria);
                 item.valorAlocado = parseFloat(item.valorAlocado) - valorMudou;
                 estado.cofrinho += valorMudou;
 
-                // Converte o Cofrinho de volta para "Dias Livres" se acumular o suficiente
                 while (estado.cofrinho >= (estado.valorDiaria - 0.01)) {
-                    estado.cofrinho -= estado.valorDiaria;
-                    estado.diariasLivres++;
+                    estado.cofrinho -= estado.valorDiaria; estado.diariasLivres++;
                 }
             }
 
-            // Atualiza Status do Item
             if(item.valorAlocado >= (item.valorTotal - 0.01)) {
-                item.valorAlocado = item.valorTotal; // Crava pra não ter erro de decimal
-                item.status = 'Conquistado';
+                item.valorAlocado = item.valorTotal; item.status = 'Conquistado';
             } else { item.status = 'Pendente'; }
 
             salvarLocal(); atualizarInterface(); forcarFecharModal();
 
             if(!API_URL.includes("COLE_A_URL")) {
-                const dt = new Date(); const mesAno = `${("0" + (dt.getMonth() + 1)).slice(-2)}/${dt.getFullYear()}`;
-                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'atualizarValorItem', idItem: item.id, novoValor: item.valorAlocado, mesAno: mesAno, finalizado: item.status === 'Conquistado', valorDiaria: estado.valorDiaria }) });
+                mostrarSync();
+                try {
+                    const dt = new Date(); const mesAno = `${("0" + (dt.getMonth() + 1)).slice(-2)}/${dt.getFullYear()}`;
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'atualizarValorItem', idItem: item.id, novoValor: item.valorAlocado, mesAno: mesAno, finalizado: item.status === 'Conquistado', valorDiaria: estado.valorDiaria }) });
+                } catch(e) { console.error("Erro no Sync", e); }
+                finally { ocultarSync(); }
             }
         }
 
-        // FUNÇÕES DE CADASTRO, EDIÇÃO E HISTÓRICO...
         function verificarTipoParcela() {
             const tipo = document.getElementById('novo-item-tipo').value;
             document.getElementById('div-parcelas').style.display = tipo === 'Parcelada' ? 'block' : 'none';
@@ -403,20 +401,33 @@
             if(!nome || !valor) return alert("Preencha nome e valor.");
             if(tipo === 'Parcelada' && parcelas <= 1) return alert("Para compras parceladas, informe um número de parcelas maior que 1.");
             
+            document.getElementById('btn-salvar-item').disabled = true;
             document.getElementById('btn-salvar-item').innerText = "Salvando...";
             
             if(!API_URL.includes("COLE_A_URL")) {
-                const action = idEdit ? 'editarItem' : 'adicionarItem';
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: action, idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
-                carregarItensDaAPI();
+                mostrarSync();
+                try {
+                    const action = idEdit ? 'editarItem' : 'adicionarItem';
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: action, idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
+                    await carregarItensDaAPI(); // Puxa a lista atualizada
+                } catch(e) { console.error("Erro ao salvar", e); }
+                finally { ocultarSync(); }
             }
+            
+            document.getElementById('btn-salvar-item').disabled = false;
             document.getElementById('btn-salvar-item').innerText = "Salvar Item"; fecharEdicao();
         }
 
         async function apagarItem() {
             if(!confirm(`Tem certeza que deseja excluir '${itemSelecionadoParaAcao.nome}'?`)) return;
-            forcarFecharModal(); estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id); atualizarInterface();
-            if(!API_URL.includes("COLE_A_URL")) fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) });
+            forcarFecharModal(); estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id); 
+            salvarLocal(); atualizarInterface();
+            
+            if(!API_URL.includes("COLE_A_URL")) {
+                mostrarSync();
+                try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) }); }
+                catch(e) {} finally { ocultarSync(); }
+            }
         }
 
         async function encerrarMes() {
