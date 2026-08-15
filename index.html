@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conquistas Diárias V6 - Auto Limpeza</title>
+    <title>Conquistas Diárias V7 - Conexão Blindada</title>
     <style>
         :root { --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50; --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3; --warning: #FFC107; --danger: #f44336; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
@@ -159,16 +159,36 @@
 
     <script>
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycby-MVfLte4wWSTgsb-PBGZfewCjbGZmGyiB_9cJiZklmNARbZwYCyYCDJjNx6mMwCoq/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzy2DZOigtbJikLF3qewmw1tCS4U9M8Y4YE0C46vUEnSjhPhxTxkZSzBRW7J6ptSKqc/exec"; 
         // ==========================================
 
         let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diasMarcados: [], itens: [] };
-        // Removidas as variáveis locais de 'cofrinho' e 'diariasLivres'. Agora elas são calculadas puramente!
-        
         let historicoCompleto = []; let itemSelecionadoParaAcao = null;
 
         function mostrarSync() { document.getElementById('sync-indicator').style.display = 'block'; }
         function ocultarSync() { document.getElementById('sync-indicator').style.display = 'none'; }
+
+        // O NOVO CORAÇÃO DA CONEXÃO BLINDADA
+        async function apiFetch(action, params = {}) {
+            if(API_URL.includes("COLE_A_URL")) return null;
+            mostrarSync();
+            try {
+                const bodyData = { action: action, ...params };
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Força o envio burlando CORS
+                    body: JSON.stringify(bodyData)
+                });
+                const json = await res.json();
+                if (!json.success) console.error("Erro da API no Google:", json.error);
+                return json;
+            } catch(e) {
+                console.error("Erro na tentativa de conexão:", e);
+                return null;
+            } finally {
+                ocultarSync();
+            }
+        }
 
         window.onload = () => {
             const salvo = localStorage.getItem('gamificacao_estado');
@@ -181,41 +201,31 @@
             }
         };
 
-        function salvarLocal() {
-            localStorage.setItem('gamificacao_estado', JSON.stringify(estado));
-        }
+        function salvarLocal() { localStorage.setItem('gamificacao_estado', JSON.stringify(estado)); }
 
         function iniciarMes() {
-            const entradas = parseFloat(document.getElementById('input-entradas').value);
-            const dias = parseInt(document.getElementById('input-dias').value);
+            const entradas = parseFloat(document.getElementById('input-entradas').value); const dias = parseInt(document.getElementById('input-dias').value);
             if(!entradas || !dias) return alert("Preencha as entradas e a meta de dias.");
             
-            estado.entradas = entradas; estado.metaDias = dias; estado.valorDiaria = entradas / dias;
-            estado.diasMarcados = [];
+            estado.entradas = entradas; estado.metaDias = dias; estado.valorDiaria = entradas / dias; estado.diasMarcados = [];
             salvarLocal(); iniciarMesVisual();
         }
 
         function iniciarMesVisual() {
-            document.getElementById('setup-card').style.display = 'none';
-            document.getElementById('bottom-nav').style.display = 'flex';
-            document.getElementById('tab-home').classList.add('active');
-            atualizarInterface(); renderizarCalendarioReal(); 
-            carregarItensDaAPI(); 
+            document.getElementById('setup-card').style.display = 'none'; document.getElementById('bottom-nav').style.display = 'flex'; document.getElementById('tab-home').classList.add('active');
+            atualizarInterface(); renderizarCalendarioReal(); carregarItensDaAPI(); 
         }
 
         function mudarAba(abaId, elementoNav) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.getElementById('tab-' + abaId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            if(elementoNav) elementoNav.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.getElementById('tab-' + abaId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active')); if(elementoNav) elementoNav.classList.add('active');
         }
 
-        // ====== O NOVO CORAÇÃO MATEMÁTICO DO APLICATIVO ======
         function calcularSaldoAbsoluto() {
             const totalGerado = estado.diasMarcados.length * estado.valorDiaria;
             const totalAlocado = estado.itens.reduce((acc, it) => acc + parseFloat(it.valorAlocado || 0), 0);
             let saldoRestante = totalGerado - totalAlocado;
-            if (saldoRestante < 0.01) saldoRestante = 0; // Proteção contra falhas de decimal
+            if (saldoRestante < 0.01) saldoRestante = 0; 
             
             const livres = Math.floor(saldoRestante / estado.valorDiaria);
             let cofre = saldoRestante - (livres * estado.valorDiaria);
@@ -242,39 +252,26 @@
 
         function renderizarCalendarioReal() {
             const cal = document.getElementById('calendar'); cal.innerHTML = '';
-            ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(d => {
-                const div = document.createElement('div'); div.className = 'weekday'; div.innerText = d; cal.appendChild(div);
-            });
+            ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(d => { const div = document.createElement('div'); div.className = 'weekday'; div.innerText = d; cal.appendChild(div); });
             const hoje = new Date(); const ano = hoje.getFullYear(); const mes = hoje.getMonth();
             const primeiroDia = new Date(ano, mes, 1).getDay(); const diasNoMes = new Date(ano, mes + 1, 0).getDate();
             document.getElementById('mes-atual-label').innerText = hoje.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
             for(let i = 0; i < primeiroDia; i++) { const div = document.createElement('div'); div.className = 'day empty'; cal.appendChild(div); }
-
             for(let i = 1; i <= diasNoMes; i++) {
                 const div = document.createElement('div'); div.className = 'day'; div.innerText = i;
                 if(estado.diasMarcados.includes(i)) div.classList.add('worked');
-                div.onclick = () => alternarDia(i, div);
-                cal.appendChild(div);
+                div.onclick = () => alternarDia(i, div); cal.appendChild(div);
             }
         }
 
         function alternarDia(dia, elemento) {
             const index = estado.diasMarcados.indexOf(dia);
             if(index > -1) {
-                // Tenta Desmarcar - Se ele desmarcar, o valor gerado fica menor que o valor já gasto?
-                const mat = calcularSaldoAbsoluto();
-                const novoTotalGerado = (estado.diasMarcados.length - 1) * estado.valorDiaria;
-                
-                if (novoTotalGerado < mat.totalAlocado - 0.01) {
-                    alert("Você já gastou esse dinheiro em algum item! Desfaça a alocação nas suas contas antes de desmarcar o dia de trabalho.");
-                    return;
-                }
-                
+                const mat = calcularSaldoAbsoluto(); const novoTotalGerado = (estado.diasMarcados.length - 1) * estado.valorDiaria;
+                if (novoTotalGerado < mat.totalAlocado - 0.01) return alert("Você já gastou esse dinheiro em algum item! Desfaça a alocação nas contas antes.");
                 estado.diasMarcados.splice(index, 1); elemento.classList.remove('worked');
-            } else {
-                estado.diasMarcados.push(dia); elemento.classList.add('worked');
-            }
+            } else { estado.diasMarcados.push(dia); elemento.classList.add('worked'); }
             salvarLocal(); atualizarInterface();
         }
 
@@ -286,38 +283,21 @@
                 const perc = Math.min((parseFloat(item.valorAlocado) / parseFloat(item.valorTotal)) * 100, 100);
                 const conquistado = item.status === 'Conquistado' || perc >= 100;
                 
-                const card = document.createElement('div');
-                card.className = `item-card ${conquistado ? 'conquistado' : ''}`;
-                card.onclick = () => abrirModalAcoes(item.id);
+                const card = document.createElement('div'); card.className = `item-card ${conquistado ? 'conquistado' : ''}`; card.onclick = () => abrirModalAcoes(item.id);
                 
                 let tituloVisual = item.nome;
                 if (item.tipo === 'Fixa' || item.tipo === 'Sim') tituloVisual += ' 📌';
                 if (item.tipo === 'Parcelada') tituloVisual += ` <span style="font-size:0.8em; color:var(--accent);">(${item.parcelaAtual}/${item.totalParcelas})</span>`;
 
-                let html = `
-                    <div class="item-header">
-                        <div class="item-title">${tituloVisual}</div>
-                        <div style="font-size: 0.8em; color:var(--text-muted)">R$ ${parseFloat(item.valorAlocado).toFixed(2)} / R$ ${parseFloat(item.valorTotal).toFixed(2)}</div>
-                    </div>
-                    <div class="progress-bg"><div class="progress-fill" style="width: ${perc}%"></div></div>
-                `;
+                let html = `<div class="item-header"><div class="item-title">${tituloVisual}</div><div style="font-size: 0.8em; color:var(--text-muted)">R$ ${parseFloat(item.valorAlocado).toFixed(2)} / R$ ${parseFloat(item.valorTotal).toFixed(2)}</div></div><div class="progress-bg"><div class="progress-fill" style="width: ${perc}%"></div></div>`;
                 if (conquistado) html += `<div class="badge">✓ PAGO</div>`;
                 card.innerHTML = html; lista.appendChild(card);
             });
         }
 
         async function carregarItensDaAPI() {
-            if(API_URL.includes("COLE_A_URL")) return;
-            mostrarSync();
-            try {
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDados' }) });
-                const json = await res.json();
-                if(json.success) { 
-                    estado.itens = json.data.itens; 
-                    salvarLocal(); atualizarInterface(); 
-                }
-            } catch(e) { console.error("Falha ao puxar da Planilha", e); }
-            finally { ocultarSync(); }
+            const json = await apiFetch('getDados');
+            if(json && json.success) { estado.itens = json.data.itens; salvarLocal(); atualizarInterface(); }
         }
 
         function abrirModalAcoes(idItem) {
@@ -332,7 +312,6 @@
             
             document.getElementById('btn-modal-add').disabled = (itemSelecionadoParaAcao.status === 'Conquistado' || mat.saldoRestante <= 0.01);
             document.getElementById('btn-modal-remove').disabled = (parseFloat(itemSelecionadoParaAcao.valorAlocado) <= 0);
-            
             document.getElementById('item-modal').style.display = 'flex';
         }
 
@@ -341,128 +320,75 @@
 
         async function processarAlocacao(multiplicador) {
             if(!itemSelecionadoParaAcao) return;
-            const item = itemSelecionadoParaAcao;
-            const mat = calcularSaldoAbsoluto();
-            let valorMudou = 0;
+            const item = itemSelecionadoParaAcao; const mat = calcularSaldoAbsoluto(); let valorMudou = 0;
 
-            if (multiplicador > 0) { // ADICIONAR
+            if (multiplicador > 0) { 
                 let falta = parseFloat(item.valorTotal) - parseFloat(item.valorAlocado);
                 if (falta <= 0) return;
-                
-                if (mat.saldoRestante <= 0.01) return alert("Você não tem saldo disponível! Marque um dia no calendário.");
-
+                if (mat.saldoRestante <= 0.01) return alert("Sem saldo disponível!");
                 valorMudou = Math.min(falta, mat.saldoRestante);
                 item.valorAlocado = parseFloat(item.valorAlocado) + valorMudou;
-            } else { // DESFAZER
+            } else { 
                 if (parseFloat(item.valorAlocado) <= 0) return;
-                
-                // Desfaz até 1 dia de trabalho por vez (para não zerar tudo com um clique sem querer)
                 valorMudou = Math.min(parseFloat(item.valorAlocado), estado.valorDiaria);
                 item.valorAlocado = parseFloat(item.valorAlocado) - valorMudou;
             }
 
-            if(item.valorAlocado >= (item.valorTotal - 0.01)) {
-                item.valorAlocado = item.valorTotal; item.status = 'Conquistado';
-            } else { item.status = 'Pendente'; }
+            if(item.valorAlocado >= (item.valorTotal - 0.01)) { item.valorAlocado = item.valorTotal; item.status = 'Conquistado'; } 
+            else { item.status = 'Pendente'; }
 
             salvarLocal(); atualizarInterface(); forcarFecharModal();
 
-            if(!API_URL.includes("COLE_A_URL")) {
-                mostrarSync();
-                try {
-                    const dt = new Date(); const mesAno = `${("0" + (dt.getMonth() + 1)).slice(-2)}/${dt.getFullYear()}`;
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'atualizarValorItem', idItem: item.id, novoValor: item.valorAlocado, mesAno: mesAno, finalizado: item.status === 'Conquistado', valorDiaria: estado.valorDiaria }) });
-                } catch(e) { console.error("Erro no Sync", e); }
-                finally { ocultarSync(); }
-            }
+            // Envia o comando para o Google
+            const dt = new Date(); const mesAno = `${("0" + (dt.getMonth() + 1)).slice(-2)}/${dt.getFullYear()}`;
+            await apiFetch('atualizarValorItem', { idItem: item.id, novoValor: item.valorAlocado, mesAno: mesAno, finalizado: item.status === 'Conquistado', valorDiaria: estado.valorDiaria });
         }
 
-        function verificarTipoParcela() {
-            const tipo = document.getElementById('novo-item-tipo').value;
-            document.getElementById('div-parcelas').style.display = tipo === 'Parcelada' ? 'block' : 'none';
-        }
+        function verificarTipoParcela() { document.getElementById('div-parcelas').style.display = document.getElementById('novo-item-tipo').value === 'Parcelada' ? 'block' : 'none'; }
 
         function abrirCadastro() {
-            document.getElementById('titulo-form-item').innerText = "Cadastrar Novo Item";
-            document.getElementById('item-id-edit').value = ""; document.getElementById('novo-item-nome').value = ""; document.getElementById('novo-item-valor').value = "";
-            document.getElementById('novo-item-tipo').value = "Única"; document.getElementById('novo-item-parcelas').value = "";
-            document.getElementById('btn-cancelar-edicao').style.display = 'none'; verificarTipoParcela();
-            mudarAba('add', document.querySelectorAll('.nav-item')[1]);
+            document.getElementById('titulo-form-item').innerText = "Cadastrar Novo Item"; document.getElementById('item-id-edit').value = ""; document.getElementById('novo-item-nome').value = ""; document.getElementById('novo-item-valor').value = ""; document.getElementById('novo-item-tipo').value = "Única"; document.getElementById('novo-item-parcelas').value = ""; document.getElementById('btn-cancelar-edicao').style.display = 'none'; verificarTipoParcela(); mudarAba('add', document.querySelectorAll('.nav-item')[1]);
         }
 
         function prepararEdicao() {
-            forcarFecharModal(); document.getElementById('titulo-form-item').innerText = "Editar Item";
-            document.getElementById('item-id-edit').value = itemSelecionadoParaAcao.id; document.getElementById('novo-item-nome').value = itemSelecionadoParaAcao.nome;
-            document.getElementById('novo-item-valor').value = itemSelecionadoParaAcao.valorTotal;
-            let tipoSalvo = itemSelecionadoParaAcao.tipo; if (tipoSalvo === 'Sim') tipoSalvo = 'Fixa'; if (tipoSalvo === 'Não') tipoSalvo = 'Única';
-            document.getElementById('novo-item-tipo').value = tipoSalvo; document.getElementById('novo-item-parcelas').value = itemSelecionadoParaAcao.totalParcelas || "";
-            verificarTipoParcela(); document.getElementById('btn-cancelar-edicao').style.display = 'block'; mudarAba('add', document.querySelectorAll('.nav-item')[1]);
+            forcarFecharModal(); document.getElementById('titulo-form-item').innerText = "Editar Item"; document.getElementById('item-id-edit').value = itemSelecionadoParaAcao.id; document.getElementById('novo-item-nome').value = itemSelecionadoParaAcao.nome; document.getElementById('novo-item-valor').value = itemSelecionadoParaAcao.valorTotal; let tipoSalvo = itemSelecionadoParaAcao.tipo; if (tipoSalvo === 'Sim') tipoSalvo = 'Fixa'; if (tipoSalvo === 'Não') tipoSalvo = 'Única'; document.getElementById('novo-item-tipo').value = tipoSalvo; document.getElementById('novo-item-parcelas').value = itemSelecionadoParaAcao.totalParcelas || ""; verificarTipoParcela(); document.getElementById('btn-cancelar-edicao').style.display = 'block'; mudarAba('add', document.querySelectorAll('.nav-item')[1]);
         }
 
         function fecharEdicao() { abrirCadastro(); mudarAba('home', document.querySelectorAll('.nav-item')[0]); }
 
         async function salvarItem() {
-            const idEdit = document.getElementById('item-id-edit').value; const nome = document.getElementById('novo-item-nome').value;
-            const valor = parseFloat(document.getElementById('novo-item-valor').value); const tipo = document.getElementById('novo-item-tipo').value;
-            const parcelas = parseInt(document.getElementById('novo-item-parcelas').value) || 1;
+            const idEdit = document.getElementById('item-id-edit').value; const nome = document.getElementById('novo-item-nome').value; const valor = parseFloat(document.getElementById('novo-item-valor').value); const tipo = document.getElementById('novo-item-tipo').value; const parcelas = parseInt(document.getElementById('novo-item-parcelas').value) || 1;
+            if(!nome || !valor) return alert("Preencha nome e valor."); if(tipo === 'Parcelada' && parcelas <= 1) return alert("Parcelas deve ser maior que 1.");
             
-            if(!nome || !valor) return alert("Preencha nome e valor.");
-            if(tipo === 'Parcelada' && parcelas <= 1) return alert("Para compras parceladas, informe um número de parcelas maior que 1.");
-            
-            document.getElementById('btn-salvar-item').disabled = true;
-            document.getElementById('btn-salvar-item').innerText = "Salvando...";
-            
-            if(!API_URL.includes("COLE_A_URL")) {
-                mostrarSync();
-                try {
-                    const action = idEdit ? 'editarItem' : 'adicionarItem';
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: action, idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
-                    await carregarItensDaAPI();
-                } catch(e) { console.error("Erro ao salvar", e); }
-                finally { ocultarSync(); }
-            }
-            
-            document.getElementById('btn-salvar-item').disabled = false;
-            document.getElementById('btn-salvar-item').innerText = "Salvar Item"; fecharEdicao();
+            document.getElementById('btn-salvar-item').disabled = true; document.getElementById('btn-salvar-item').innerText = "Salvando...";
+            const action = idEdit ? 'editarItem' : 'adicionarItem';
+            await apiFetch(action, { idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas });
+            await carregarItensDaAPI();
+            document.getElementById('btn-salvar-item').disabled = false; document.getElementById('btn-salvar-item').innerText = "Salvar Item"; fecharEdicao();
         }
 
         async function apagarItem() {
             if(!confirm(`Tem certeza que deseja excluir '${itemSelecionadoParaAcao.nome}'?`)) return;
-            forcarFecharModal(); estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id); 
-            salvarLocal(); atualizarInterface();
-            
-            if(!API_URL.includes("COLE_A_URL")) {
-                mostrarSync();
-                try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) }); }
-                catch(e) {} finally { ocultarSync(); }
-            }
+            forcarFecharModal(); estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id); salvarLocal(); atualizarInterface();
+            await apiFetch('excluirItem', { idItem: itemSelecionadoParaAcao.id });
         }
 
         async function encerrarMes() {
-            if(!confirm("Isso vai iniciar um novo mês zerado: limpando o calendário, esvaziando o cofrinho, deletando itens normais pagos, avançando parcelas e resetando os itens fixos. Continuar?")) return;
-            localStorage.removeItem('gamificacao_estado');
-            if(!API_URL.includes("COLE_A_URL")) {
-                document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Preparando novo mês...</h2>";
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'encerrarMes' }) });
-                window.location.reload();
-            } else { window.location.reload(); }
+            if(!confirm("Isso vai iniciar um novo mês zerado! Continuar?")) return;
+            localStorage.removeItem('gamificacao_estado'); document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Preparando novo mês...</h2>";
+            await apiFetch('encerrarMes'); window.location.reload();
         }
 
         async function carregarHistoricoDaAPI() {
-            if(API_URL.includes("COLE_A_URL")) return;
             document.getElementById('historico-list').innerHTML = "<p>Carregando histórico...</p>";
-            try {
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getHistorico' }) });
-                const json = await res.json();
-                if(json.success) { historicoCompleto = json.data.historico; preencherFiltroMeses(); renderizarHistorico(); }
-            } catch(e) { document.getElementById('historico-list').innerHTML = "<p>Erro ao buscar histórico.</p>"; }
+            const json = await apiFetch('getHistorico');
+            if(json && json.success) { historicoCompleto = json.data.historico; preencherFiltroMeses(); renderizarHistorico(); } 
+            else { document.getElementById('historico-list').innerHTML = "<p>Erro ao buscar histórico.</p>"; }
         }
 
         function preencherFiltroMeses() {
-            const select = document.getElementById('filtro-mes');
-            const mesesUnicos = [...new Set(historicoCompleto.map(h => h.mesAno))];
-            select.innerHTML = '<option value="todos">Todos os Meses</option>';
-            mesesUnicos.forEach(m => { select.innerHTML += `<option value="${m}">${m}</option>`; });
+            const select = document.getElementById('filtro-mes'); const mesesUnicos = [...new Set(historicoCompleto.map(h => h.mesAno))];
+            select.innerHTML = '<option value="todos">Todos os Meses</option>'; mesesUnicos.forEach(m => { select.innerHTML += `<option value="${m}">${m}</option>`; });
         }
 
         function renderizarHistorico() {
@@ -470,9 +396,7 @@
             let filtrado = historicoCompleto; if(mesSelecionado !== 'todos') filtrado = historicoCompleto.filter(h => h.mesAno === mesSelecionado);
             if(filtrado.length === 0) { divHistorico.innerHTML = "<p>Nenhuma conquista registrada.</p>"; return; }
             divHistorico.innerHTML = '';
-            filtrado.forEach(h => {
-                divHistorico.innerHTML += `<div class="hist-item"><div style="display:flex; justify-content:space-between; font-weight:bold;"><span>${h.item}</span><span style="color:var(--primary)">R$ ${parseFloat(h.valor).toFixed(2)}</span></div><div class="hist-date">Pago em ${h.data} • Custou ${h.dias} dias trabalhados</div></div>`;
-            });
+            filtrado.forEach(h => { divHistorico.innerHTML += `<div class="hist-item"><div style="display:flex; justify-content:space-between; font-weight:bold;"><span>${h.item}</span><span style="color:var(--primary)">R$ ${parseFloat(h.valor).toFixed(2)}</span></div><div class="hist-date">Pago em ${h.data} • Custou ${h.dias} dias trabalhados</div></div>`; });
         }
     </script>
 </body>
