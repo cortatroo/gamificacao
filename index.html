@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conquistas Diárias V4</title>
+    <title>Conquistas Diárias V5</title>
     <style>
-        :root { --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50; --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3; --danger: #f44336; }
+        :root { --bg-color: #121212; --card-bg: #1e1e1e; --primary: #4CAF50; --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #2196F3; --warning: #FFC107; --danger: #f44336; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 480px; min-height: 100vh; padding: 20px; padding-bottom: 90px; box-sizing: border-box; }
         h1, h2 { margin-top: 0; }
@@ -33,15 +33,15 @@
         .calendar-header { text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .weekday { font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;}
-        .day { background: #2a2a2a; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+        .day { background: #2a2a2a; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .day.empty { background: transparent; cursor: default;}
         .day:active:not(.empty) { transform: scale(0.9); }
         .day.worked { background-color: var(--primary); color: white; box-shadow: 0 0 8px rgba(76, 175, 80, 0.4); }
 
-        .status-bar { display: flex; justify-content: space-between; background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 20px; position: sticky; top: 10px; z-index: 10; border: 1px solid var(--primary); }
+        .status-bar { display: flex; justify-content: space-between; background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 15px; position: sticky; top: 10px; z-index: 10; border: 1px solid var(--primary); }
         .status-val { font-size: 1.2em; font-weight: bold; color: var(--primary); }
         
-        .item-card { background: #2a2a2a; border-radius: 10px; padding: 15px; margin-bottom: 12px; cursor: pointer; position: relative; }
+        .item-card { background: #2a2a2a; border-radius: 10px; padding: 15px; margin-bottom: 12px; cursor: pointer; position: relative; transition: 0.2s;}
         .item-card:active { transform: scale(0.98); }
         .item-header { display: flex; justify-content: space-between; margin-bottom: 8px;}
         .item-title { font-weight: bold; font-size: 1.1em; }
@@ -50,7 +50,6 @@
         .conquistado { border: 2px solid var(--primary); opacity: 0.8; }
         .badge { position: absolute; top: 10px; right: 10px; background: var(--primary); color: #000; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
-        /* Modal de Ações */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: flex-end; z-index: 200; }
         .modal-content { background: var(--card-bg); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -71,9 +70,21 @@
         </div>
 
         <div id="tab-home" class="tab-content">
+            
+            <!-- TERMÔMETRO DO MÊS -->
+            <div class="card" style="margin-bottom: 15px; padding: 12px 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 0.9em; font-weight: bold;">Progresso Global do Mês</span>
+                    <span style="font-size: 0.8em; color: var(--text-muted);" id="lbl-progresso-valores">R$ 0,00 / R$ 0,00</span>
+                </div>
+                <div class="progress-bg" style="height: 14px;"><div class="progress-fill" id="bar-progresso-mes" style="width: 0%; background: var(--accent);"></div></div>
+            </div>
+
+            <!-- STATUS BAR E COFRINHO -->
             <div class="status-bar">
-                <div style="text-align:center;"><div style="font-size:0.8em; color:var(--text-muted)">Valor do Dia</div><div class="status-val" id="lbl-diaria">R$ 0,00</div></div>
-                <div style="text-align:center;"><div style="font-size:0.8em; color:var(--text-muted)">Dias Livres</div><div class="status-val" id="lbl-livres" style="color:var(--accent);">0</div></div>
+                <div style="text-align:center;"><div style="font-size:0.75em; color:var(--text-muted)">Valor do Dia</div><div class="status-val" id="lbl-diaria" style="font-size: 1.1em;">R$ 0,00</div></div>
+                <div style="text-align:center;"><div style="font-size:0.75em; color:var(--text-muted)">Cofrinho</div><div class="status-val" id="lbl-cofrinho" style="font-size: 1.1em; color:var(--warning);">R$ 0,00</div></div>
+                <div style="text-align:center;"><div style="font-size:0.75em; color:var(--text-muted)">Dias Livres</div><div class="status-val" id="lbl-livres" style="font-size: 1.1em; color:var(--accent);">0</div></div>
             </div>
 
             <div class="card">
@@ -134,14 +145,14 @@
         <div class="nav-item" onclick="mudarAba('history', this); carregarHistoricoDaAPI();"><span class="nav-icon">📜</span>Histórico</div>
     </nav>
 
-    <!-- MODAL DE AÇÕES DO ITEM -->
+    <!-- MODAL DE AÇÕES -->
     <div class="modal-overlay" id="item-modal" onclick="fecharModal(event)">
         <div class="modal-content" id="modal-body">
             <h2 id="modal-title" style="margin-bottom: 5px;">Nome do Item</h2>
             <p id="modal-subtitle" style="color:var(--text-muted); font-size: 0.9em; margin-top:0; margin-bottom: 20px;">R$ 0,00 / R$ 0,00</p>
             
-            <button class="btn-success" id="btn-modal-add" onclick="processarAlocacao(1)">➕ Alocar 1 Dia (Adicionar Valor)</button>
-            <button class="btn-outline" id="btn-modal-remove" onclick="processarAlocacao(-1)">➖ Desfazer 1 Dia (Remover Valor)</button>
+            <button class="btn-success" id="btn-modal-add" onclick="processarAlocacao(1)">💰 Alocar Valor (Usa Cofrinho e Dias)</button>
+            <button class="btn-outline" id="btn-modal-remove" onclick="processarAlocacao(-1)">⏪ Desfazer Alocação</button>
             
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button style="background: #333;" onclick="prepararEdicao()">✏️ Editar</button>
@@ -155,26 +166,22 @@
         const API_URL = "https://script.google.com/macros/s/AKfycby-MVfLte4wWSTgsb-PBGZfewCjbGZmGyiB_9cJiZklmNARbZwYCyYCDJjNx6mMwCoq/exec"; 
         // ==========================================
 
-        let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diariasLivres: 0, diasMarcados: [], itens: [] };
-        let historicoCompleto = [];
-        let itemSelecionadoParaAcao = null;
+        let estado = { entradas: 0, metaDias: 0, valorDiaria: 0, diariasLivres: 0, cofrinho: 0, diasMarcados: [], itens: [] };
+        let historicoCompleto = []; let itemSelecionadoParaAcao = null;
 
         window.onload = () => {
             const salvo = localStorage.getItem('gamificacao_estado');
             if (salvo) {
                 const dados = JSON.parse(salvo);
                 estado.entradas = dados.entradas; estado.metaDias = dados.metaDias; estado.valorDiaria = dados.valorDiaria;
-                estado.diariasLivres = dados.diariasLivres; estado.diasMarcados = dados.diasMarcados;
-                
-                document.getElementById('input-entradas').value = estado.entradas;
-                document.getElementById('input-dias').value = estado.metaDias;
-                
+                estado.diariasLivres = dados.diariasLivres || 0; estado.cofrinho = dados.cofrinho || 0; estado.diasMarcados = dados.diasMarcados || [];
+                document.getElementById('input-entradas').value = estado.entradas; document.getElementById('input-dias').value = estado.metaDias;
                 iniciarMesVisual();
             }
         };
 
         function salvarLocal() {
-            const dadosParaSalvar = { entradas: estado.entradas, metaDias: estado.metaDias, valorDiaria: estado.valorDiaria, diariasLivres: estado.diariasLivres, diasMarcados: estado.diasMarcados };
+            const dadosParaSalvar = { entradas: estado.entradas, metaDias: estado.metaDias, valorDiaria: estado.valorDiaria, diariasLivres: estado.diariasLivres, cofrinho: estado.cofrinho, diasMarcados: estado.diasMarcados };
             localStorage.setItem('gamificacao_estado', JSON.stringify(dadosParaSalvar));
         }
 
@@ -184,7 +191,7 @@
             if(!entradas || !dias) return alert("Preencha as entradas e a meta de dias.");
             
             estado.entradas = entradas; estado.metaDias = dias; estado.valorDiaria = entradas / dias;
-            estado.diariasLivres = 0; estado.diasMarcados = [];
+            estado.diariasLivres = 0; estado.cofrinho = 0; estado.diasMarcados = [];
             salvarLocal(); iniciarMesVisual();
         }
 
@@ -205,6 +212,16 @@
         function atualizarInterface() {
             document.getElementById('lbl-diaria').innerText = `R$ ${estado.valorDiaria.toFixed(2)}`;
             document.getElementById('lbl-livres').innerText = estado.diariasLivres;
+            document.getElementById('lbl-cofrinho').innerText = `R$ ${(estado.cofrinho).toFixed(2)}`;
+
+            // Lógica do Termômetro Global
+            const totalGastos = estado.itens.reduce((acc, it) => acc + parseFloat(it.valorTotal), 0);
+            const totalGerado = estado.diasMarcados.length * estado.valorDiaria;
+            let percMes = totalGastos > 0 ? Math.min((totalGerado / totalGastos) * 100, 100) : 0;
+
+            document.getElementById('lbl-progresso-valores').innerText = `R$ ${totalGerado.toFixed(2)} / R$ ${totalGastos.toFixed(2)} (${percMes.toFixed(0)}%)`;
+            document.getElementById('bar-progresso-mes').style.width = `${percMes}%`;
+
             renderizarItens();
         }
 
@@ -230,8 +247,17 @@
         function alternarDia(dia, elemento) {
             const index = estado.diasMarcados.indexOf(dia);
             if(index > -1) {
-                estado.diasMarcados.splice(index, 1); estado.diariasLivres--; elemento.classList.remove('worked');
+                // Tenta Desmarcar
+                if(estado.diariasLivres > 0) {
+                    estado.diariasLivres--; estado.diasMarcados.splice(index, 1); elemento.classList.remove('worked');
+                } else if(estado.cofrinho >= (estado.valorDiaria - 0.01)) { // Permite tirar do cofrinho
+                    estado.cofrinho -= estado.valorDiaria; estado.diasMarcados.splice(index, 1); elemento.classList.remove('worked');
+                } else {
+                    alert("Você já gastou esse dia em algum item. Desfaça a alocação no item primeiro para poder desmarcar o calendário.");
+                    return;
+                }
             } else {
+                // Marcar
                 estado.diasMarcados.push(dia); estado.diariasLivres++; elemento.classList.add('worked');
             }
             salvarLocal(); atualizarInterface();
@@ -270,7 +296,7 @@
             try {
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDados' }) });
                 const json = await res.json();
-                if(json.success) { estado.itens = json.data.itens; renderizarItens(); }
+                if(json.success) { estado.itens = json.data.itens; atualizarInterface(); }
             } catch(e) { console.error(e); }
         }
 
@@ -283,7 +309,7 @@
             document.getElementById('modal-title').innerText = displayTitle;
             document.getElementById('modal-subtitle').innerText = `R$ ${parseFloat(itemSelecionadoParaAcao.valorAlocado).toFixed(2)} / R$ ${parseFloat(itemSelecionadoParaAcao.valorTotal).toFixed(2)}`;
             
-            document.getElementById('btn-modal-add').disabled = (itemSelecionadoParaAcao.status === 'Conquistado' || estado.diariasLivres <= 0);
+            document.getElementById('btn-modal-add').disabled = (itemSelecionadoParaAcao.status === 'Conquistado' || (estado.diariasLivres <= 0 && estado.cofrinho <= 0));
             document.getElementById('btn-modal-remove').disabled = (parseFloat(itemSelecionadoParaAcao.valorAlocado) <= 0);
             
             document.getElementById('item-modal').style.display = 'flex';
@@ -295,28 +321,56 @@
         async function processarAlocacao(multiplicador) {
             if(!itemSelecionadoParaAcao) return;
             const item = itemSelecionadoParaAcao;
-            const valorCalculado = estado.valorDiaria * multiplicador;
+            let valorMudou = 0;
 
-            if(multiplicador > 0) {
-                if(estado.diariasLivres <= 0) return;
-                estado.diariasLivres--;
-            } else { estado.diariasLivres++; }
+            if (multiplicador > 0) { // ADICIONAR
+                let falta = parseFloat(item.valorTotal) - parseFloat(item.valorAlocado);
+                if (falta <= 0) return;
 
-            let novoAlocado = parseFloat(item.valorAlocado) + valorCalculado;
-            if(novoAlocado < 0) novoAlocado = 0;
-            
-            item.valorAlocado = novoAlocado;
-            if(item.valorAlocado >= item.valorTotal) { item.valorAlocado = item.valorTotal; item.status = 'Conquistado'; }
-            else { item.status = 'Pendente'; }
+                let disponivel = estado.cofrinho;
+
+                // Se o cofrinho não cobre o que falta e temos dias livres, "quebra" mais um dia pro cofrinho
+                if (disponivel < falta && estado.diariasLivres > 0) {
+                    estado.diariasLivres--;
+                    disponivel += estado.valorDiaria;
+                }
+
+                if (disponivel <= 0) return alert("Sem saldo no Cofrinho ou Dias Livres.");
+
+                valorMudou = Math.min(falta, disponivel);
+                item.valorAlocado = parseFloat(item.valorAlocado) + valorMudou;
+                estado.cofrinho = disponivel - valorMudou; // O troco fica no cofrinho
+
+            } else { // DESFAZER
+                if (parseFloat(item.valorAlocado) <= 0) return;
+
+                // Remove até o limite do valor de 1 dia para não zerar tudo de uma vez sem querer
+                valorMudou = Math.min(parseFloat(item.valorAlocado), estado.valorDiaria);
+                item.valorAlocado = parseFloat(item.valorAlocado) - valorMudou;
+                estado.cofrinho += valorMudou;
+
+                // Converte o Cofrinho de volta para "Dias Livres" se acumular o suficiente
+                while (estado.cofrinho >= (estado.valorDiaria - 0.01)) {
+                    estado.cofrinho -= estado.valorDiaria;
+                    estado.diariasLivres++;
+                }
+            }
+
+            // Atualiza Status do Item
+            if(item.valorAlocado >= (item.valorTotal - 0.01)) {
+                item.valorAlocado = item.valorTotal; // Crava pra não ter erro de decimal
+                item.status = 'Conquistado';
+            } else { item.status = 'Pendente'; }
 
             salvarLocal(); atualizarInterface(); forcarFecharModal();
 
             if(!API_URL.includes("COLE_A_URL")) {
                 const dt = new Date(); const mesAno = `${("0" + (dt.getMonth() + 1)).slice(-2)}/${dt.getFullYear()}`;
-                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'alocarValor', idItem: item.id, valorDia: valorCalculado, mesAno: mesAno }) });
+                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'atualizarValorItem', idItem: item.id, novoValor: item.valorAlocado, mesAno: mesAno, finalizado: item.status === 'Conquistado', valorDiaria: estado.valorDiaria }) });
             }
         }
 
+        // FUNÇÕES DE CADASTRO, EDIÇÃO E HISTÓRICO...
         function verificarTipoParcela() {
             const tipo = document.getElementById('novo-item-tipo').value;
             document.getElementById('div-parcelas').style.display = tipo === 'Parcelada' ? 'block' : 'none';
@@ -324,42 +378,26 @@
 
         function abrirCadastro() {
             document.getElementById('titulo-form-item').innerText = "Cadastrar Novo Item";
-            document.getElementById('item-id-edit').value = "";
-            document.getElementById('novo-item-nome').value = "";
-            document.getElementById('novo-item-valor').value = "";
-            document.getElementById('novo-item-tipo').value = "Única";
-            document.getElementById('novo-item-parcelas').value = "";
-            document.getElementById('btn-cancelar-edicao').style.display = 'none';
-            verificarTipoParcela();
+            document.getElementById('item-id-edit').value = ""; document.getElementById('novo-item-nome').value = ""; document.getElementById('novo-item-valor').value = "";
+            document.getElementById('novo-item-tipo').value = "Única"; document.getElementById('novo-item-parcelas').value = "";
+            document.getElementById('btn-cancelar-edicao').style.display = 'none'; verificarTipoParcela();
             mudarAba('add', document.querySelectorAll('.nav-item')[1]);
         }
 
         function prepararEdicao() {
-            forcarFecharModal();
-            document.getElementById('titulo-form-item').innerText = "Editar Item";
-            document.getElementById('item-id-edit').value = itemSelecionadoParaAcao.id;
-            document.getElementById('novo-item-nome').value = itemSelecionadoParaAcao.nome;
+            forcarFecharModal(); document.getElementById('titulo-form-item').innerText = "Editar Item";
+            document.getElementById('item-id-edit').value = itemSelecionadoParaAcao.id; document.getElementById('novo-item-nome').value = itemSelecionadoParaAcao.nome;
             document.getElementById('novo-item-valor').value = itemSelecionadoParaAcao.valorTotal;
-            
-            let tipoSalvo = itemSelecionadoParaAcao.tipo;
-            if (tipoSalvo === 'Sim') tipoSalvo = 'Fixa';
-            if (tipoSalvo === 'Não') tipoSalvo = 'Única';
-            
-            document.getElementById('novo-item-tipo').value = tipoSalvo;
-            document.getElementById('novo-item-parcelas').value = itemSelecionadoParaAcao.totalParcelas || "";
-            verificarTipoParcela();
-            
-            document.getElementById('btn-cancelar-edicao').style.display = 'block';
-            mudarAba('add', document.querySelectorAll('.nav-item')[1]);
+            let tipoSalvo = itemSelecionadoParaAcao.tipo; if (tipoSalvo === 'Sim') tipoSalvo = 'Fixa'; if (tipoSalvo === 'Não') tipoSalvo = 'Única';
+            document.getElementById('novo-item-tipo').value = tipoSalvo; document.getElementById('novo-item-parcelas').value = itemSelecionadoParaAcao.totalParcelas || "";
+            verificarTipoParcela(); document.getElementById('btn-cancelar-edicao').style.display = 'block'; mudarAba('add', document.querySelectorAll('.nav-item')[1]);
         }
 
         function fecharEdicao() { abrirCadastro(); mudarAba('home', document.querySelectorAll('.nav-item')[0]); }
 
         async function salvarItem() {
-            const idEdit = document.getElementById('item-id-edit').value;
-            const nome = document.getElementById('novo-item-nome').value;
-            const valor = parseFloat(document.getElementById('novo-item-valor').value);
-            const tipo = document.getElementById('novo-item-tipo').value;
+            const idEdit = document.getElementById('item-id-edit').value; const nome = document.getElementById('novo-item-nome').value;
+            const valor = parseFloat(document.getElementById('novo-item-valor').value); const tipo = document.getElementById('novo-item-tipo').value;
             const parcelas = parseInt(document.getElementById('novo-item-parcelas').value) || 1;
             
             if(!nome || !valor) return alert("Preencha nome e valor.");
@@ -367,33 +405,23 @@
             
             document.getElementById('btn-salvar-item').innerText = "Salvando...";
             
-            if(idEdit) {
-                if(!API_URL.includes("COLE_A_URL")) {
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'editarItem', idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
-                    carregarItensDaAPI();
-                }
-            } else {
-                if(!API_URL.includes("COLE_A_URL")) {
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adicionarItem', nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
-                    carregarItensDaAPI();
-                }
+            if(!API_URL.includes("COLE_A_URL")) {
+                const action = idEdit ? 'editarItem' : 'adicionarItem';
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: action, idItem: idEdit, nome: nome, valor: valor, tipo: tipo, totalParcelas: parcelas }) });
+                carregarItensDaAPI();
             }
-            document.getElementById('btn-salvar-item').innerText = "Salvar Item";
-            fecharEdicao();
+            document.getElementById('btn-salvar-item').innerText = "Salvar Item"; fecharEdicao();
         }
 
         async function apagarItem() {
             if(!confirm(`Tem certeza que deseja excluir '${itemSelecionadoParaAcao.nome}'?`)) return;
-            forcarFecharModal();
-            estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id);
-            atualizarInterface();
+            forcarFecharModal(); estado.itens = estado.itens.filter(i => i.id != itemSelecionadoParaAcao.id); atualizarInterface();
             if(!API_URL.includes("COLE_A_URL")) fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirItem', idItem: itemSelecionadoParaAcao.id }) });
         }
 
         async function encerrarMes() {
-            if(!confirm("Isso vai limpar seu calendário, apagar os itens normais pagos, avançar as parcelas e resetar os itens fixos. Deseja iniciar um novo mês?")) return;
+            if(!confirm("Isso vai iniciar um novo mês zerado: limpando o calendário, esvaziando o cofrinho, deletando itens normais pagos, avançando parcelas e resetando os itens fixos. Continuar?")) return;
             localStorage.removeItem('gamificacao_estado');
-            
             if(!API_URL.includes("COLE_A_URL")) {
                 document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Preparando novo mês...</h2>";
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'encerrarMes' }) });
@@ -407,10 +435,7 @@
             try {
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getHistorico' }) });
                 const json = await res.json();
-                if(json.success) {
-                    historicoCompleto = json.data.historico;
-                    preencherFiltroMeses(); renderizarHistorico();
-                }
+                if(json.success) { historicoCompleto = json.data.historico; preencherFiltroMeses(); renderizarHistorico(); }
             } catch(e) { document.getElementById('historico-list').innerHTML = "<p>Erro ao buscar histórico.</p>"; }
         }
 
@@ -422,23 +447,12 @@
         }
 
         function renderizarHistorico() {
-            const divHistorico = document.getElementById('historico-list');
-            const mesSelecionado = document.getElementById('filtro-mes').value;
-            let filtrado = historicoCompleto;
-            if(mesSelecionado !== 'todos') filtrado = historicoCompleto.filter(h => h.mesAno === mesSelecionado);
-
+            const divHistorico = document.getElementById('historico-list'); const mesSelecionado = document.getElementById('filtro-mes').value;
+            let filtrado = historicoCompleto; if(mesSelecionado !== 'todos') filtrado = historicoCompleto.filter(h => h.mesAno === mesSelecionado);
             if(filtrado.length === 0) { divHistorico.innerHTML = "<p>Nenhuma conquista registrada.</p>"; return; }
-
             divHistorico.innerHTML = '';
             filtrado.forEach(h => {
-                divHistorico.innerHTML += `
-                    <div class="hist-item">
-                        <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                            <span>${h.item}</span><span style="color:var(--primary)">R$ ${parseFloat(h.valor).toFixed(2)}</span>
-                        </div>
-                        <div class="hist-date">Pago em ${h.data} • Custou ${h.dias} dias trabalhados</div>
-                    </div>
-                `;
+                divHistorico.innerHTML += `<div class="hist-item"><div style="display:flex; justify-content:space-between; font-weight:bold;"><span>${h.item}</span><span style="color:var(--primary)">R$ ${parseFloat(h.valor).toFixed(2)}</span></div><div class="hist-date">Pago em ${h.data} • Custou ${h.dias} dias trabalhados</div></div>`;
             });
         }
     </script>
